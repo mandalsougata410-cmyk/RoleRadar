@@ -61,8 +61,8 @@
                     </button>
                 </form>
                 <div class="flex flex-wrap gap-2 mt-2.5">
-                    <button onclick="quickQuery('Remote Python internships paying above 50k')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">⚡ Remote Python >50k</button>
-                    <button onclick="quickQuery('Roles at YC startups in Gurugram')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">📍 YC in Gurugram</button>
+                    <button onclick="quickQuery('Remote Python & AI internships paying above 50k')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">⚡ Remote Python >50k</button>
+                    <button onclick="quickQuery('High growth tech startups across India')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">📍 Pan-India & Remote Roles</button>
                     <button onclick="quickQuery('I know React, Docker, and FastAPI')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">🧠 Update Skills</button>
                 </div>
             </div>
@@ -75,9 +75,9 @@
             <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur">
                 <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Persistent Profile Memory</h3>
                 <div id="userMemory" class="space-y-1.5 text-xs text-slate-300">
-                    <div><span class="text-slate-500">Skills:</span> <span id="memSkills" class="font-medium text-amber-400">Python, SQL, FastAPI</span></div>
-                    <div><span class="text-slate-500">Min Stipend:</span> <span id="memStipend" class="font-medium">₹30,000/mo</span></div>
-                    <div><span class="text-slate-500">Target Locations:</span> <span id="memLoc" class="font-medium">Gurugram, Bengaluru, Remote</span></div>
+                    <div><span class="text-slate-500">Skills:</span> <span id="memSkills" class="font-medium text-amber-400">Python, SQL, FastAPI, React</span></div>
+                    <div><span class="text-slate-500">Min Stipend:</span> <span id="memStipend" class="font-medium">₹35,000/mo</span></div>
+                    <div><span class="text-slate-500">Target Locations:</span> <span id="memLoc" class="font-medium">Remote, Bengaluru, Mumbai, Delhi NCR, Pune</span></div>
                 </div>
             </div>
 
@@ -98,26 +98,26 @@
     </main>
 
     <script>
-        // Internship Database inside Client & API Engine
+        // Internship Database inside Client & API Engine (Diverse Tech Companies across India & Remote)
         const JOB_DATABASE = [
             {
                 id: 1,
                 title: "Software Engineering Intern",
-                company: "Elip (YC W25)",
-                location: "Gurugram / Bengaluru",
+                company: "BrowserStack",
+                location: "Mumbai / Remote",
                 is_remote: true,
-                stipend: 75000,
-                skills_required: ["Python", "FastAPI", "SQL", "LLMs", "Docker"],
-                requirements_text: "Build LLM-powered conversational agents that use tools and remember context. Hybrid retrieval and semantic search over changing indices. Evaluate LLM outputs.",
-                score: 0.96,
-                match_pct: 96
+                stipend: 65000,
+                skills_required: ["Python", "FastAPI", "SQL", "Docker", "Linux"],
+                requirements_text: "Build scalable cloud infrastructure test runners and developer telemetry pipelines. Design modular backend APIs.",
+                score: 0.95,
+                match_pct: 95
             },
             {
                 id: 2,
-                title: "AI/ML Intern",
+                title: "AI & ML Systems Intern",
                 company: "Sarvam AI",
-                location: "Bengaluru",
-                is_remote: false,
+                location: "Bengaluru / Hybrid",
+                is_remote: true,
                 stipend: 70000,
                 skills_required: ["Python", "PyTorch", "NLP", "LLMs", "Vector DB"],
                 requirements_text: "Fine-tune open-source models, curate multilingual speech and text datasets, and build evaluation pipelines.",
@@ -127,45 +127,57 @@
             {
                 id: 3,
                 title: "Backend Engineering Intern",
-                company: "Swiggy",
-                location: "Bengaluru",
-                is_remote: false,
+                company: "Razorpay",
+                location: "Bengaluru / Remote",
+                is_remote: true,
                 stipend: 60000,
                 skills_required: ["Go", "Python", "PostgreSQL", "Kafka", "Docker"],
-                requirements_text: "Design scalable RESTful APIs, optimize high-throughput database queries, and manage microservices.",
-                score: 0.88,
-                match_pct: 88
+                requirements_text: "Design high-throughput payment webhook consumers, optimize database indexes, and build resilient microservices.",
+                score: 0.89,
+                match_pct: 89
             },
             {
                 id: 4,
-                title: "Full Stack Developer Intern",
-                company: "Razorpay",
-                location: "Bengaluru",
+                title: "Full Stack Engineer Intern",
+                company: "Postman",
+                location: "Bengaluru / Remote",
                 is_remote: true,
-                stipend: 50000,
+                stipend: 55000,
                 skills_required: ["React", "Node.js", "TypeScript", "PostgreSQL"],
-                requirements_text: "Develop intuitive checkout UI components and robust backend payment webhook handlers.",
-                score: 0.84,
-                match_pct: 84
+                requirements_text: "Develop intuitive collaborative developer workspaces, WebSocket syncing, and performant UI components.",
+                score: 0.86,
+                match_pct: 86
             },
             {
                 id: 5,
                 title: "Data Engineering Intern",
                 company: "Zepto",
-                location: "Mumbai",
+                location: "Mumbai / Pune",
                 is_remote: false,
                 stipend: 55000,
                 skills_required: ["Python", "SQL", "Snowflake", "Airflow", "Spark"],
                 requirements_text: "Build real-time ETL data pipelines, monitor warehouse performance, and write complex analytics queries.",
-                score: 0.81,
-                match_pct: 81
+                score: 0.83,
+                match_pct: 83
+            },
+            {
+                id: 6,
+                title: "Cloud & DevOps Intern",
+                company: "Urban Company",
+                location: "Gurugram / Delhi NCR",
+                is_remote: false,
+                stipend: 50000,
+                skills_required: ["Docker", "Kubernetes", "AWS", "Python", "CI/CD"],
+                requirements_text: "Automate service deployments, monitor Kubernetes pod health, and optimize container build caches.",
+                score: 0.80,
+                match_pct: 80
             }
         ];
 
         let userProfile = {
-            skills: ["Python", "SQL", "FastAPI"],
-            min_stipend: 30000,
-            locations: ["Gurugram", "Bengaluru", "Remote"]
+            skills: ["Python", "SQL", "FastAPI", "React"],
+            min_stipend: 35000,
+            locations: ["Remote", "Bengaluru", "Mumbai", "Delhi NCR", "Pune"]
         };
 
         const chatForm = document.getElementById('chatForm');
@@ -259,13 +271,13 @@
             // 4. Formulate Response
             let reply = "";
             if (lower.includes("what do you know") || lower.includes("who are you") || lower.includes("help")) {
-                reply = "🤖 I am **RoleRadar**, an AI career agent built for student engineering placements!\n\n" +
-                        "• I index real software engineering & AI internships (like Elip, Sarvam AI, Razorpay).\n" +
-                        "• I calculate semantic & skill overlap match percentages.\n" +
-                        "• I remember your skills, preferred locations, and stipend constraints.\n\n" +
-                        "Try asking me: *'Remote Python internships paying above 50k'* or *'Add Docker to my skills'*!";
+                reply = "🤖 I am **RoleRadar**, an intelligent career and internship discovery agent!\n\n" +
+                        "• I index opportunities across top tech firms & hyper-growth startups (BrowserStack, Razorpay, Sarvam AI, Postman, etc.).\n" +
+                        "• I compute semantic similarity, tech stack match, and personalized re-ranking.\n" +
+                        "• I remember your skills, preferred cities (Remote, Bengaluru, Mumbai, Delhi NCR, Pune), and stipend preferences.\n\n" +
+                        "Try asking me: *'Remote Python & AI roles above 50k'* or *'Backend engineering in Mumbai or Remote'*!";
             } else if (lower.includes("hi") || lower.includes("hello")) {
-                reply = "👋 Hey! Great to connect with you. I've updated your profile memory. What kind of internship role are you looking for right now?";
+                reply = "👋 Hey Sougata! Great to connect with you. I've loaded your profile memory. What kind of engineering or AI internship are you targeting?";
             } else {
                 let top = filtered[0];
                 reply = `🎯 Found **${filtered.length} matching internships** for your request:\n\n` +
