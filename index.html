@@ -24,14 +24,9 @@
             </div>
         </div>
         <div class="flex items-center space-x-4">
-            <!-- Voice Assistant Mode Toggle -->
-            <button id="voiceToggleBtn" onclick="toggleVoiceOutput()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
-                <span id="speakerIcon">🔊</span>
-                <span id="voiceStatusText">Voice Output: ON</span>
-            </button>
             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-                FastAPI + Hybrid Search
+                FastAPI + Hybrid Search Engine
             </span>
             <a href="https://github.com/mandalsougata410-cmyk/RoleRadar" target="_blank" class="text-xs text-slate-400 hover:text-white underline">GitHub Code</a>
         </div>
@@ -51,29 +46,16 @@
                 <div class="flex items-start space-x-3">
                     <div class="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">AI</div>
                     <div class="bg-slate-800/70 p-3.5 rounded-2xl rounded-tl-none border border-slate-700/50 max-w-md text-sm leading-relaxed text-slate-200">
-                        Hey Sougata! I'm your AI career agent. Tell me what kind of internship you're aiming for (e.g. <em>"Show me remote Python/AI internships paying ₹50k+"</em>) and I'll match and rank them for you!
+                        Hey! I'm your AI career agent. Tell me what kind of internship you're aiming for (e.g. <em>"Show me remote Python/AI internships paying ₹50k+"</em>) and I'll match and rank them for you!
                     </div>
                 </div>
             </div>
 
-            <!-- Input Bar with Mic Button -->
+            <!-- Input Bar -->
             <div class="p-4 border-t border-slate-800 bg-slate-900/60">
-                <form id="chatForm" class="flex items-center space-x-2">
-                    <input id="chatInput" type="text" placeholder="Type or click the microphone to talk..." 
+                <form id="chatForm" class="flex space-x-2">
+                    <input id="chatInput" type="text" placeholder="Ask e.g. 'Show me remote Python roles with high stipend'..." 
                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition placeholder-slate-500 text-slate-100">
-                    
-                    <!-- Microphone Speech-to-Text Button -->
-                    <button type="button" id="micBtn" onclick="toggleListening()" title="Speak with Voice Assistant"
-                            class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition flex items-center justify-center shrink-0">
-                        <svg id="micIcon" class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                        </svg>
-                        <span id="listeningPulse" class="hidden relative flex h-3 w-3 -mr-1 -mt-3">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                        </span>
-                    </button>
-
                     <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
                         Send
                     </button>
@@ -97,7 +79,7 @@
                 </div>
                 <div id="userMemory" class="space-y-2 text-xs text-slate-300">
                     <div><span class="text-slate-500">Candidate:</span> <span id="memName" class="font-semibold text-slate-200">You (Guest Job Seeker)</span></div>
-                    <div><span class="text-slate-500">Extracted Skills:</span> <span id="memSkills" class="font-medium text-amber-400">None detected yet (Tell me your tech stack!)</span></div>
+                    <div><span class="text-slate-500">Extracted Skills:</span> <span id="memSkills" class="font-normal text-slate-500 italic">None detected yet (Tell me your tech stack!)</span></div>
                     <div><span class="text-slate-500">Target Stipend:</span> <span id="memStipend" class="font-medium text-slate-200">Flexible (Any)</span></div>
                     <div><span class="text-slate-500">Preferred Locations:</span> <span id="memLoc" class="font-medium text-slate-200">Open to Any / Remote</span></div>
                 </div>
@@ -107,11 +89,11 @@
             <div class="flex-1 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur flex flex-col">
                 <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 flex justify-between items-center">
                     <span>Ranked Recommendations</span>
-                    <span id="matchCount" class="text-slate-500 font-normal">4 items</span>
+                    <span id="matchCount" class="text-slate-500 font-normal">0 items</span>
                 </h3>
                 
                 <div id="jobList" class="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[50vh]">
-                    <!-- Initial populated list -->
+                    <!-- populated list -->
                 </div>
             </div>
 
@@ -120,7 +102,7 @@
     </main>
 
     <script>
-        // Internship Database inside Client & API Engine (Diverse Tech Companies across India & Remote)
+        // Internship Database inside Client & API Engine
         const JOB_DATABASE = [
             {
                 id: 1,
@@ -196,113 +178,14 @@
             }
         ];
 
-        // Dynamic User Profile Memory (Persisted in browser localStorage across sessions)
-        // ================= VOICE ASSISTANT ENGINE (STT & TTS) =================
-        let voiceOutputEnabled = true;
-        let isListening = false;
-        let recognition = null;
+        // Dynamic User Profile Memory
+        let userProfile = {
+            name: "Candidate",
+            skills: [],
+            min_stipend: null,
+            locations: []
+        };
 
-        // Initialize Speech Recognition (Supported in Chrome, Edge, Safari, Opera, Android)
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                isListening = true;
-                document.getElementById('micBtn').className = "bg-rose-500/20 text-rose-400 border border-rose-500/40 p-2.5 rounded-xl transition flex items-center justify-center shrink-0";
-                document.getElementById('listeningPulse').classList.remove('hidden');
-                document.getElementById('chatInput').placeholder = "Listening... Speak your tech stack or question!";
-            };
-
-            recognition.onresult = (event) => {
-                const speechResult = event.results[0][0].transcript;
-                document.getElementById('chatInput').value = speechResult;
-                processUserMessage(speechResult);
-                document.getElementById('chatInput').value = '';
-            };
-
-            recognition.onerror = (event) => {
-                console.warn("Speech recognition error:", event.error);
-                stopListeningUI();
-            };
-
-            recognition.onend = () => {
-                stopListeningUI();
-            };
-        }
-
-        function toggleListening() {
-            if (!recognition) {
-                alert("Voice input is supported in Google Chrome, Microsoft Edge, Safari, and Android browsers!");
-                return;
-            }
-            if (isListening) {
-                recognition.stop();
-                stopListeningUI();
-            } else {
-                try {
-                    recognition.start();
-                } catch(e) {
-                    recognition.stop();
-                }
-            }
-        }
-
-        function stopListeningUI() {
-            isListening = false;
-            document.getElementById('micBtn').className = "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition flex items-center justify-center shrink-0";
-            document.getElementById('listeningPulse').classList.add('hidden');
-            document.getElementById('chatInput').placeholder = "Type or click the microphone to talk...";
-        }
-
-        function toggleVoiceOutput() {
-            voiceOutputEnabled = !voiceOutputEnabled;
-            const statusText = document.getElementById('voiceStatusText');
-            const icon = document.getElementById('speakerIcon');
-            if (voiceOutputEnabled) {
-                statusText.innerText = "Voice Output: ON";
-                icon.innerText = "🔊";
-                speakAgentReply("Voice output is now enabled.");
-            } else {
-                statusText.innerText = "Voice Output: OFF";
-                icon.innerText = "🔇";
-                window.speechSynthesis.cancel();
-            }
-        }
-
-        // Clean markdown symbols like asterisks, emojis for smooth natural speech
-        function speakAgentReply(text) {
-            if (!voiceOutputEnabled || !('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel(); // cancel any active speech
-
-            let cleanText = text
-                .replace(/\*+/g, '')
-                .replace(/[•⭐🎯📍💰📊🛠️🤖👋🧠🔥⚡]/g, '')
-                .replace(/https?:\/\/\S+/g, '')
-                .replace(/\n+/g, '. ');
-
-            // Speak natural first 2 concise sentences so user isn't overwhelmed
-            let sentences = cleanText.split('. ').filter(s => s.trim().length > 0);
-            let speechString = sentences.slice(0, 3).join('. ');
-
-            const utterance = new SpeechSynthesisUtterance(speechString);
-            utterance.rate = 1.05;
-            utterance.pitch = 1.0;
-            utterance.lang = 'en-US';
-
-            // Pick a smooth natural voice if available
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
-            if (preferredVoice) utterance.voice = preferredVoice;
-
-            window.speechSynthesis.speak(utterance);
-        }
-        // ======================================================================
-
-        // Load existing saved memory if candidate visited previously
         const savedMemory = localStorage.getItem('roleradar_user_profile');
         if (savedMemory) {
             try {
@@ -334,35 +217,10 @@
             chatInput.value = '';
         });
 
-        // 100% Robust Agent Engine that never crashes regardless of cloud server drops
-        async function processUserMessage(message) {
+        // Instant, Uninterrupted Message Processing
+        function processUserMessage(message) {
             appendMessage('user', message);
-
-            // Attempt backend API call first
-            let handled = false;
-            try {
-                const res = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: 'student_user_1', message })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.reply && data.matched_jobs && data.matched_jobs.length > 0) {
-                        appendMessage('agent', data.reply);
-                        renderJobs(data.matched_jobs);
-                        if (data.user_profile) updateProfile(data.user_profile);
-                        handled = true;
-                    }
-                }
-            } catch (e) {
-                // Backend call caught, fallback gracefully below
-            }
-
-            if (!handled) {
-                // Execute standalone agent processor with zero external dependency
-                runAgentLocally(message);
-            }
+            runAgentLocally(message);
         }
 
         function runAgentLocally(text) {
@@ -370,7 +228,7 @@
             let tools = ["search_jobs"];
             let memoryUpdated = false;
             
-            // 1. Candidate Name Detection (e.g. "My name is Rahul", "I am Priya", "I'm Sougata")
+            // 1. Candidate Name Detection
             const nameMatch = text.match(/(?:my name is|i am|i'm|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
             if (nameMatch && nameMatch[1]) {
                 const detectedName = nameMatch[1].trim();
@@ -381,7 +239,7 @@
                 }
             }
 
-            // 2. Comprehensive Skills Extraction (Supports 30+ engineering, AI, frontend, backend, data skills)
+            // 2. Comprehensive Skills Extraction
             const ALL_SKILLS = [
                 { pattern: /\bpython\b/i, name: "Python" },
                 { pattern: /\b(sql|mysql|postgres|postgresql)\b/i, name: "SQL" },
@@ -427,7 +285,7 @@
                 memoryUpdated = true;
             }
 
-            // 4. Stipend Detection (e.g. "50k", "40000", "paying 35k+", "stipend > 60k")
+            // 4. Stipend Detection
             const stipendMatch = lower.match(/(?:stipend|paying|above|min|minimum|salary|₹|rs\.?)?\s*(\d{1,3})\s*(k|thousand)/i);
             const stipendNum = lower.match(/(?:stipend|paying|above|min|minimum|salary|₹|rs\.?)\s*(\d{4,6})/i);
             if (stipendMatch) {
@@ -443,7 +301,7 @@
                 localStorage.setItem('roleradar_user_profile', JSON.stringify(userProfile));
             }
 
-            // 5. Dynamic Two-Stage Match Scoring & Personalized Re-Ranking
+            // 5. Two-Stage Match Scoring & Personalized Re-Ranking
             let ranked = JOB_DATABASE.map(job => {
                 let score = 0.50; // base score
                 
@@ -477,7 +335,7 @@
             // Sort highest match first
             ranked.sort((a, b) => b.score - a.score);
 
-            // 6. Formulate Adaptive Natural Response
+            // 6. Adaptive Natural Response
             let reply = "";
             const candidateGreeting = userProfile.name !== "Candidate" ? ` ${userProfile.name}` : "";
 
@@ -485,7 +343,7 @@
                 reply = `🤖 Hello${candidateGreeting}! I am **RoleRadar**, your personalized AI Career Agent.\n\n` +
                         `• **Your Profile Memory:** ${userProfile.skills.length > 0 ? userProfile.skills.join(', ') : 'No skills recorded yet'}\n` +
                         `• **Preferred Locations:** ${userProfile.locations.length > 0 ? userProfile.locations.join(', ') : 'Open to any'}\n` +
-                        `• **Min Stipend:** ${userProfile.min_stipend ? '₹' + userProfile.min_stipend.toLocaleString() + '/mo' : 'Any'}\n\n` +
+                        `• **Min Stipend:** ${userProfile.min_stipend ? '₹' + userProfile.min_stipend.toLocaleString() + '/mo' : 'Flexible'}\n\n` +
                         `Tell me your stack (e.g. *"I am Rahul and I know Python, Docker, and SQL, looking for Remote >50k"*), and I will update your memory and rank real matches for you!`;
             } else if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey")) {
                 reply = `👋 Hey${candidateGreeting}! I'm ready to match you with top engineering roles. Tell me your skills, preferred cities, or target stipend!`;
@@ -510,7 +368,6 @@
             appendMessage('agent', reply);
             renderJobs(ranked);
             updateProfile(userProfile);
-            speakAgentReply(reply);
         }
 
         function appendMessage(sender, text) {
