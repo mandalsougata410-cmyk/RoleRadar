@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleRadar — AI Career & Internship Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-bold text-slate-950 text-xl shadow-lg shadow-orange-500/20">
+                ⚡
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">RoleRadar</h1>
+                <p class="text-xs text-slate-400">Conversational AI Career Agent</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                FastAPI + pgvector Hybrid Search
+            </span>
+            <a href="/docs" target="_blank" class="text-xs text-slate-400 hover:text-white underline">API Docs</a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Chat Interface (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
+            <div class="p-4 border-b border-slate-800/80 bg-slate-900/80 flex justify-between items-center">
+                <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">Agent Conversation & Memory</span>
+                <span id="toolBadge" class="hidden text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Tool Called: search_jobs</span>
+            </div>
+
+            <div id="chatBox" class="flex-1 p-4 overflow-y-auto space-y-4 max-h-[60vh]">
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-sm">AI</div>
+                    <div class="bg-slate-800/70 p-3.5 rounded-2xl rounded-tl-none border border-slate-700/50 max-w-md text-sm leading-relaxed">
+                        Hey Sougata! I'm your AI career agent. Tell me what kind of internship you're aiming for (e.g. <em>"Show me remote Python/AI internships in Bengaluru paying ₹50k+"</em>) and I'll match and rank them for you!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="p-4 border-t border-slate-800 bg-slate-900/60">
+                <form id="chatForm" class="flex space-x-2">
+                    <input id="chatInput" type="text" placeholder="Ask e.g. 'Show me remote Python roles with high stipend'..." 
+                           class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition placeholder-slate-500 text-slate-100">
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
+                        Send
+                    </button>
+                </form>
+                <div class="flex flex-wrap gap-2 mt-2.5">
+                    <button onclick="quickQuery('Remote Python internships paying above 50k')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">⚡ Remote Python >50k</button>
+                    <button onclick="quickQuery('Roles at YC startups in Gurugram')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">📍 YC in Gurugram</button>
+                    <button onclick="quickQuery('Add PyTorch, Docker, and FastAPI to my skills')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">🧠 Update Skills</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Ranked Recommendations & Profile (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col space-y-4">
+            
+            <!-- User Memory Card -->
+            <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Persistent Profile Memory</h3>
+                <div id="userMemory" class="space-y-1.5 text-xs text-slate-300">
+                    <div><span class="text-slate-500">Skills:</span> <span id="memSkills" class="font-medium text-amber-400">Python, SQL, FastAPI</span></div>
+                    <div><span class="text-slate-500">Min Stipend:</span> <span id="memStipend" class="font-medium">₹30,000/mo</span></div>
+                    <div><span class="text-slate-500">Target Locations:</span> <span id="memLoc" class="font-medium">Gurugram, Bengaluru, Remote</span></div>
+                </div>
+            </div>
+
+            <!-- Matched Internships Cards -->
+            <div class="flex-1 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur flex flex-col">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 flex justify-between items-center">
+                    <span>Ranked Recommendations</span>
+                    <span id="matchCount" class="text-slate-500 font-normal">0 items</span>
+                </h3>
+                
+                <div id="jobList" class="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[50vh]">
+                    <div class="text-center py-10 text-xs text-slate-500">
+                        Chat with the agent on the left to see ranked opportunities!
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatBox = document.getElementById('chatBox');
+        const jobList = document.getElementById('jobList');
+        const toolBadge = document.getElementById('toolBadge');
+
+        function quickQuery(text) {
+            chatInput.value = text;
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Append User Message
+            appendMessage('user', message);
+            chatInput.value = '';
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: 'student_user_1', message })
+                });
+                const data = await res.json();
+
+                // Show tool used
+                if (data.tools_called && data.tools_called.length > 0) {
+                    toolBadge.innerText = `Tools: ${data.tools_called.join(', ')}`;
+                    toolBadge.classList.remove('hidden');
+                }
+
+                appendMessage('agent', data.reply);
+                renderJobs(data.matched_jobs);
+                updateProfile(data.user_profile);
+
+            } catch (err) {
+                appendMessage('agent', "Error contacting server. Please check backend.");
+            }
+        });
+
+        function appendMessage(sender, text) {
+            const div = document.createElement('div');
+            div.className = "flex items-start space-x-3";
+            const isUser = sender === 'user';
+            
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-lg ${isUser ? 'bg-slate-700 text-slate-200' : 'bg-orange-500/20 text-orange-400'} flex items-center justify-center font-bold text-sm shrink-0">
+                    ${isUser ? 'You' : 'AI'}
+                </div>
+                <div class="${isUser ? 'bg-amber-500/10 border-amber-500/20 text-slate-100 ml-auto' : 'bg-slate-800/70 border-slate-700/50 text-slate-200'} p-3.5 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} border max-w-md text-sm leading-relaxed whitespace-pre-wrap">
+                    ${text}
+                </div>
+            `;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function renderJobs(jobs) {
+            if (!jobs || jobs.length === 0) {
+                jobList.innerHTML = `<div class="text-xs text-slate-500 text-center py-6">No matching jobs found.</div>`;
+                document.getElementById('matchCount').innerText = "0 items";
+                return;
+            }
+
+            document.getElementById('matchCount').innerText = `${jobs.length} items`;
+            jobList.innerHTML = jobs.map(j => `
+                <div class="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-slate-700 transition">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h4 class="font-semibold text-sm text-slate-100">${j.title}</h4>
+                            <p class="text-xs text-slate-400 font-medium">${j.company} • ${j.location} ${j.is_remote ? '<span class="text-emerald-400 text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 ml-1">Remote</span>' : ''}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                ${j.match_pct}% Match
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-slate-300 font-semibold">
+                        ₹${j.stipend.toLocaleString()}/month
+                    </div>
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        ${j.skills_required.map(s => `<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">${s}</span>`).join('')}
+                    </div>
+                    <div class="mt-3 flex space-x-2 pt-2 border-t border-slate-800/80">
+                        <button onclick="recordAction(${j.id}, 'saved')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Save</button>
+                        <button onclick="recordAction(${j.id}, 'dismissed')" class="text-xs px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition">Dismiss</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function recordAction(jobId, action) {
+            await fetch('/api/interaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: 'student_user_1', job_id: jobId, action })
+            });
+            quickQuery(`Updated preferences. Refresh recommendations.`);
+        }
+
+        function updateProfile(prof) {
+            if (!prof) return;
+            if (prof.skills) document.getElementById('memSkills').innerText = Array.isArray(prof.skills) ? prof.skills.join(', ') : prof.skills;
+            if (prof.min_stipend) document.getElementById('memStipend').innerText = `₹${prof.min_stipend.toLocaleString()}/mo`;
+        }
+    </script>
+</body>
+</html>
