@@ -27,9 +27,9 @@ def on_startup():
     init_db()
     seed_database()
 
-# For serverless invocations where startup events might not fire eagerly
-init_db()
-seed_database()
+# Remove top-level init_db/seed_database calls that execute on module import
+# init_db()
+# seed_database()
 
 @app.get("/health")
 def health_check():
@@ -37,20 +37,30 @@ def health_check():
 
 @app.post("/api/chat")
 async def chat_endpoint(req: dict):
-    # Ensure tables and seed exist on cold start
-    init_db()
-    seed_database()
-    
-    user_id = req.get("user_id", "student_user_1")
-    message = req.get("message", "")
-    
-    result = handle_user_chat(user_id=user_id, message=message)
-    return {
-        "reply": result["reply"],
-        "tools_called": result["tools_called"],
-        "matched_jobs": result["matched_jobs"],
-        "user_profile": result["user_profile"]
-    }
+    import traceback
+    try:
+        init_db()
+        seed_database()
+        
+        user_id = req.get("user_id", "student_user_1")
+        message = req.get("message", "")
+        
+        result = handle_user_chat(user_id=user_id, message=message)
+        return {
+            "reply": result["reply"],
+            "tools_called": result["tools_called"],
+            "matched_jobs": result["matched_jobs"],
+            "user_profile": result["user_profile"]
+        }
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print("CHAT ERROR:", error_details)
+        return {
+            "reply": f"Internal Debug Error: {str(e)}\n\nTraceback:\n{error_details}",
+            "tools_called": ["error_handler"],
+            "matched_jobs": [],
+            "user_profile": {}
+        }
 
 @app.post("/api/interaction")
 async def record_interaction(req: dict):
