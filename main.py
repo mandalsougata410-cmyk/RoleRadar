@@ -35,27 +35,35 @@ seed_database()
 def health_check():
     return {"status": "ok", "service": "RoleRadar AI Agent"}
 
-@app.post("/api/chat", response_model=ChatResponse)
-def chat_endpoint(req: ChatRequest):
-    result = handle_user_chat(user_id=req.user_id, message=req.message)
-    return ChatResponse(
-        reply=result["reply"],
-        tools_called=result["tools_called"],
-        matched_jobs=result["matched_jobs"],
-        user_profile=result["user_profile"]
-    )
+@app.post("/api/chat")
+async def chat_endpoint(req: dict):
+    # Ensure tables and seed exist on cold start
+    init_db()
+    seed_database()
+    
+    user_id = req.get("user_id", "student_user_1")
+    message = req.get("message", "")
+    
+    result = handle_user_chat(user_id=user_id, message=message)
+    return {
+        "reply": result["reply"],
+        "tools_called": result["tools_called"],
+        "matched_jobs": result["matched_jobs"],
+        "user_profile": result["user_profile"]
+    }
 
 @app.post("/api/interaction")
-def record_interaction(req: InteractionRequest):
+async def record_interaction(req: dict):
+    init_db()
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO job_interactions (user_id, job_id, action) VALUES (?, ?, ?)",
-        (req.user_id, req.job_id, req.action)
+        (req.get("user_id", "student_user_1"), req.get("job_id"), req.get("action"))
     )
     conn.commit()
     conn.close()
-    return {"status": "success", "recorded": req.action}
+    return {"status": "success", "recorded": req.get("action")}
 
 @app.get("/", response_class=HTMLResponse)
 def serve_ui():
