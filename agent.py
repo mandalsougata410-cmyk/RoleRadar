@@ -1,67 +1,86 @@
 import os
 import json
 import re
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List
 from database import get_db_connection
 from search import search_and_rank_jobs, get_job_details
 from models import UserIntentFilter
 
-# System prompt defining tools and persona
-SYSTEM_PROMPT = """You are RoleRadar, an expert AI Career and Internship Agent.
-Your goal is to help students discover and match with the best software engineering and AI internships.
-
-You have access to 3 tools:
-1. `search_jobs(role, skills, location, remote_only, min_stipend)`: Searches the internship index.
-2. `update_user_preferences(skills, target_roles, location, min_stipend)`: Saves updated user preferences to database.
-3. `explain_job_fit(job_id)`: Explains why a candidate matches or has skill gaps for a job.
-
-When speaking with the user, maintain persistent context, be direct and encouraging, and explain match scores clearly.
-"""
-
-def extract_filters_rule_based(message: str) -> UserIntentFilter:
+def parse_user_intent_dynamic(message: str) -> UserIntentFilter:
     """
-    Structured extraction parsing intent, skills, location, remote, stipend, and role.
+    Intelligent dynamic intent parser that handles ANY query, question, or comment:
+    - Greetings & general chit-chat ("hi", "who are you?", "help me")
+    - Broad questions ("what jobs do you have?", "recommend something good")
+    - Custom constraints (stipend, remote/hybrid, any city/location, technical or non-technical skills)
+    - Profile updates ("I know Java and C++", "I want 40k")
     """
-    text = message.lower()
+    text = message.lower().strip()
     
-    # Skills extraction
-    known_skills = ["python", "fastapi", "sql", "postgresql", "docker", "react", "node.js", "pytorch", "aws", "llm", "go"]
-    found_skills = [s.capitalize() if s != "node.js" else "Node.js" for s in known_skills if re.search(rf"\b{re.escape(s)}\b", text)]
+    # 1. Comprehensive Tech & Industry Skill Dictionary
+    SKILL_MAP = {
+        "python": "Python", "fastapi": "FastAPI", "flask": "Flask", "django": "Django",
+        "sql": "SQL", "postgres": "PostgreSQL", "postgresql": "PostgreSQL", "mysql": "MySQL",
+        "docker": "Docker", "kubernetes": "Kubernetes", "k8s": "Kubernetes",
+        "react": "React", "nextjs": "Next.js", "next.js": "Next.js", "node": "Node.js", "node.js": "Node.js",
+        "typescript": "TypeScript", "javascript": "JavaScript", "js": "JavaScript", "ts": "TypeScript",
+        "pytorch": "PyTorch", "tensorflow": "TensorFlow", "keras": "Keras",
+        "llm": "LLMs", "llms": "LLMs", "ai": "AI", "ml": "Machine Learning", "nlp": "NLP",
+        "rag": "RAG", "embeddings": "Embeddings", "vector": "Vector DB",
+        "aws": "AWS", "gcp": "GCP", "azure": "Azure", "cloud": "Cloud",
+        "java": "Java", "spring": "Spring Boot", "golang": "Go", "go": "Go", "c++": "C++", "rust": "Rust",
+        "kafka": "Kafka", "redis": "Redis", "airflow": "Airflow", "spark": "Spark"
+    }
     
-    # Remote detection
-    remote_only = True if "remote" in text or "wfh" in text else None
-    
-    # Location
+    found_skills = []
+    for keyword, canonical in SKILL_MAP.items():
+        if re.search(rf"\b{re.escape(keyword)}\b", text):
+            if canonical not in found_skills:
+                found_skills.append(canonical)
+                
+    # 2. Remote / On-site / WFH
+    remote_only = None
+    if re.search(r"\b(remote|wfh|work from home|online)\b", text):
+        remote_only = True
+    elif re.search(r"\b(on[- ]?site|in[- ]?office|offline)\b", text):
+        remote_only = False
+        
+    # 3. Location extraction (Any Indian tech hub or global)
     location = None
-    for city in ["bengaluru", "bangalore", "gurugram", "gurgaon", "mumbai", "delhi", "hyderabad", "pune"]:
-        if city in text:
-            location = "Bengaluru" if "bang" in city else ("Gurugram" if "gur" in city else city.capitalize())
+    cities = {
+        "bengaluru": "Bengaluru", "bangalore": "Bengaluru",
+        "gurugram": "Gurugram", "gurgaon": "Gurugram", "delhi": "Delhi", "ncr": "Gurugram",
+        "mumbai": "Mumbai", "pune": "Pune", "hyderabad": "Hyderabad",
+        "chennai": "Chennai", "noida": "Noida", "kolkata": "Kolkata"
+    }
+    for alias, formal_name in cities.items():
+        if re.search(rf"\b{re.escape(alias)}\b", text):
+            location = formal_name
             break
             
-    # Stipend extraction
+    # 4. Stipend detection (handles "50k", "50000", "paying 30k+", "above 40,000", "min 20k")
     min_stipend = None
-    stipend_match = re.search(r"(\d+)\s*(k|thousand|000)", text)
-    if stipend_match:
-        val = int(stipend_match.group(1))
-        unit = stipend_match.group(2)
-        min_stipend = val * 1000 if unit in ["k", "thousand"] else val
+    match_k = re.search(r"(\d{1,3})\s*(k|thousand)", text)
+    if match_k:
+        min_stipend = int(match_k.group(1)) * 1000
     else:
-        num_match = re.search(r"(?:stipend|paying|above|min)\s*(\d{4,6})", text)
-        if num_match:
-            min_stipend = int(num_match.group(1))
+        match_num = re.search(r"(?:stipend|paying|above|min|salary|₹|rs\.?)\s*(\d{4,6})", text)
+        if match_num:
+            min_stipend = int(match_num.group(1))
             
-    # Role detection
+    # 5. Role & Domain detection
     role = None
-    if "backend" in text:
+    if re.search(r"\b(backend|server|api|database)\b", text):
         role = "Backend"
-    elif "ai" in text or "llm" in text or "ml" in text:
+    elif re.search(r"\b(ai|llm|ml|machine learning|nlp|data science)\b", text):
         role = "AI"
-    elif "full stack" in text or "fullstack" in text:
+    elif re.search(r"\b(full[- ]?stack|fullstack)\b", text):
         role = "Full Stack"
-    elif "frontend" in text:
+    elif re.search(r"\b(frontend|ui|ux|web)\b", text):
         role = "Frontend"
-    elif "devops" in text or "cloud" in text:
+    elif re.search(r"\b(devops|sre|cloud|infrastructure)\b", text):
         role = "DevOps"
+    elif re.search(r"\b(data|etl|analytics)\b", text):
+        role = "Data"
         
     return UserIntentFilter(
         role=role,
@@ -75,20 +94,20 @@ def handle_user_chat(user_id: str, message: str) -> Dict[str, Any]:
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # 1. Store incoming message in persistent chat memory
+    # 1. Store chat history
     cursor.execute("INSERT INTO chat_messages (user_id, role, content) VALUES (?, 'user', ?)", (user_id, message))
     
-    # 2. Extract structured intent & filters
-    filters = extract_filters_rule_based(message)
+    # 2. Dynamically parse intent
+    filters = parse_user_intent_dynamic(message)
     tools_called = []
     
-    # 3. Check if user wants to update their profile
+    # 3. Update memory whenever user mentions new skills, target location, or stipend
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    current_skills = json.loads(user["skills"]) if user and user["skills"] else []
+    
     if filters.skills or filters.min_stipend or filters.location:
-        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        user = cursor.fetchone()
-        current_skills = json.loads(user["skills"]) if user and user["skills"] else []
-        new_skills = list(set(current_skills + filters.skills))
-        
+        updated_skills = list(set(current_skills + filters.skills))
         cursor.execute("""
         UPDATE users 
         SET skills = ?, 
@@ -96,10 +115,10 @@ def handle_user_chat(user_id: str, message: str) -> Dict[str, Any]:
             min_stipend = COALESCE(?, min_stipend),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-        """, (json.dumps(new_skills), filters.location, filters.location, filters.min_stipend, user_id))
+        """, (json.dumps(updated_skills), filters.location, filters.location, filters.min_stipend, user_id))
         tools_called.append("update_user_preferences")
         
-    # 4. Search and rank jobs
+    # 4. Search and rank internships
     tools_called.append("search_jobs")
     matched_jobs = search_and_rank_jobs(
         user_id=user_id,
@@ -107,23 +126,63 @@ def handle_user_chat(user_id: str, message: str) -> Dict[str, Any]:
         location=filters.location,
         remote_only=filters.remote_only,
         min_stipend=filters.min_stipend,
-        limit=4
+        limit=5
     )
     
-    # 5. Formulate natural response
-    if matched_jobs:
-        top_job = matched_jobs[0]
-        reply_parts = [
-            f"I found {len(matched_jobs)} top opportunities matching your profile:",
-            f"\n🔥 **Top Pick: {top_job['title']} at {top_job['company']}** ({top_job['location']})",
-            f"• **Stipend:** ₹{top_job['stipend']:,}/month",
-            f"• **Match Score:** {top_job['match_pct']}% based on your skills ({', '.join(top_job['skills_required'])})",
-            f"• **Requirements:** {top_job['requirements_text'][:120]}...\n",
-            "You can save or dismiss any of these cards, or tell me to refine by tech stack, stipend, or location!"
-        ]
-        reply = "\n".join(reply_parts)
+    # 5. Formulate human-like conversational response for ANY comment
+    text_lower = message.lower().strip()
+    greetings = ["hi", "hello", "hey", "sup", "greetings", "good morning", "good evening"]
+    
+    if any(text_lower == g or text_lower.startswith(g + " ") for g in greetings):
+        reply = (
+            f"👋 Hello! Great to meet you! I've loaded your profile context with skills like "
+            f"{', '.join(current_skills[:3]) if current_skills else 'Python & Engineering'}.\n\n"
+            f"Here are {len(matched_jobs)} top opportunities currently open for you. "
+            f"You can tell me anything like: *'I want remote roles only'*, *'filter above ₹50k'*, "
+            f"or *'I also know React and Docker'* to instantly re-rank them!"
+        )
+    elif "who are you" in text_lower or "what can you do" in text_lower or "help" in text_lower:
+        reply = (
+            f"🤖 I am **RoleRadar**, your conversational AI Career Agent.\n"
+            f"• I remember your skills, target locations, and preferences across conversations.\n"
+            f"• I use hybrid SQL + semantic search to match and rank real internships based on your profile.\n"
+            f"• You can give me any preference (e.g. *'Show me AI startups in Gurugram'* or *'Roles paying >60k'*) and I'll find them!"
+        )
+    elif matched_jobs:
+        top = matched_jobs[0]
+        skill_str = ", ".join(top['skills_required'][:4])
+        reply = (
+            f"🎯 Found **{len(matched_jobs)} matching internships** for your request:\n\n"
+            f"⭐ **Top Match: {top['title']} at {top['company']}**\n"
+            f"📍 {top['location']} {'(Remote Available 🌐)' if top['is_remote'] else ''}\n"
+            f"💰 ₹{top['stipend']:,}/month  |  📊 **{top['match_pct']}% Profile Match**\n"
+            f"🛠️ Tech: {skill_str}\n\n"
+            f"Check the ranked cards on the right. Would you like to refine by tech stack, stipend, or location?"
+        )
     else:
-        reply = "I couldn't find an exact match for those specific filters. Would you like to expand your location or stipend preferences?"
+        # Graceful fallback: If hard filters yielded 0, fall back to top overall internships
+        cursor.execute("SELECT * FROM jobs WHERE is_active = 1 LIMIT 4")
+        fallback_rows = cursor.fetchall()
+        matched_jobs = [
+            {
+                "id": r["id"],
+                "title": r["title"],
+                "company": r["company"],
+                "location": r["location"],
+                "is_remote": bool(r["is_remote"]),
+                "stipend": r["stipend"],
+                "skills_required": json.loads(r["skills_required"]) if r["skills_required"] else [],
+                "requirements_text": r["requirements_text"],
+                "score": 0.75,
+                "match_pct": 75
+            }
+            for r in fallback_rows
+        ]
+        reply = (
+            f"I didn't find exact listings with those strict constraints, but here are the "
+            f"top featured engineering internships currently hiring! You can adjust your location, "
+            f"role, or stipend preferences anytime."
+        )
         
     # 6. Store assistant response
     cursor.execute("INSERT INTO chat_messages (user_id, role, content) VALUES (?, 'assistant', ?)", (user_id, reply))
@@ -142,3 +201,4 @@ def handle_user_chat(user_id: str, message: str) -> Dict[str, Any]:
         "matched_jobs": matched_jobs,
         "user_profile": updated_user
     }
+
