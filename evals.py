@@ -1,5 +1,5 @@
 import time
-from agent import extract_filters_rule_based
+from agent import parse_user_intent_dynamic
 from search import search_and_rank_jobs
 from database import init_db
 from seed_data import seed_database
@@ -14,7 +14,7 @@ EVAL_BENCHMARK = [
     },
     {
         "query": "Backend roles in Bengaluru with SQL and Docker",
-        "expected_skills": ["Sql", "Docker"],
+        "expected_skills": ["SQL", "Docker"],
         "expected_remote": None,
         "expected_min_stipend": None,
         "relevant_company": "Swiggy"
@@ -28,14 +28,14 @@ EVAL_BENCHMARK = [
     },
     {
         "query": "React and Node.js full stack internship",
-        "expected_skills": ["React"],
+        "expected_skills": ["React", "Node.js"],
         "expected_remote": None,
         "expected_min_stipend": None,
         "relevant_company": "Razorpay"
     },
     {
         "query": "Looking for DevOps or Cloud roles with AWS and Docker",
-        "expected_skills": ["Docker", "Aws"],
+        "expected_skills": ["Docker", "AWS"],
         "expected_remote": None,
         "expected_min_stipend": None,
         "relevant_company": "BrowserStack"
@@ -59,7 +59,7 @@ def run_evaluations():
         start = time.time()
         
         # 1. Evaluate intent filter extraction accuracy
-        extracted = extract_filters_rule_based(test_case["query"])
+        extracted = parse_user_intent_dynamic(test_case["query"])
         
         # Check correctness
         skills_match = all(s in extracted.skills for s in test_case["expected_skills"])
@@ -99,7 +99,7 @@ def run_evaluations():
     print(f"• Retrieval Recall@5                : {recall_5:.1f}%")
     print(f"• Mean Query Latency                : {avg_latency:.2f} ms")
     print("==============================================\n")
-    print("Add these verified metrics to your resume project description!")
 
 if __name__ == "__main__":
     run_evaluations()
+
