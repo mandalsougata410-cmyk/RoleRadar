@@ -71,13 +71,17 @@
         <!-- Right: Ranked Recommendations & Profile (5 cols) -->
         <div class="lg:col-span-5 flex flex-col space-y-4">
             
-            <!-- User Memory Card -->
+            <!-- User Memory Card (Dynamically updated from user input) -->
             <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur">
-                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Persistent Profile Memory</h3>
-                <div id="userMemory" class="space-y-1.5 text-xs text-slate-300">
-                    <div><span class="text-slate-500">Skills:</span> <span id="memSkills" class="font-medium text-amber-400">Python, SQL, FastAPI, React</span></div>
-                    <div><span class="text-slate-500">Min Stipend:</span> <span id="memStipend" class="font-medium">₹35,000/mo</span></div>
-                    <div><span class="text-slate-500">Target Locations:</span> <span id="memLoc" class="font-medium">Remote, Bengaluru, Mumbai, Delhi NCR, Pune</span></div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Live Candidate Profile Memory</h3>
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Auto-Adapts to User</span>
+                </div>
+                <div id="userMemory" class="space-y-2 text-xs text-slate-300">
+                    <div><span class="text-slate-500">Candidate:</span> <span id="memName" class="font-semibold text-slate-200">You (Guest Job Seeker)</span></div>
+                    <div><span class="text-slate-500">Extracted Skills:</span> <span id="memSkills" class="font-medium text-amber-400">None detected yet (Tell me your tech stack!)</span></div>
+                    <div><span class="text-slate-500">Target Stipend:</span> <span id="memStipend" class="font-medium text-slate-200">Flexible (Any)</span></div>
+                    <div><span class="text-slate-500">Preferred Locations:</span> <span id="memLoc" class="font-medium text-slate-200">Open to Any / Remote</span></div>
                 </div>
             </div>
 
@@ -174,11 +178,21 @@
             }
         ];
 
+        // Dynamic User Profile Memory (Persisted in browser localStorage across sessions)
         let userProfile = {
-            skills: ["Python", "SQL", "FastAPI", "React"],
-            min_stipend: 35000,
-            locations: ["Remote", "Bengaluru", "Mumbai", "Delhi NCR", "Pune"]
+            name: "Candidate",
+            skills: [],
+            min_stipend: null,
+            locations: []
         };
+
+        // Load existing saved memory if candidate visited previously
+        const savedMemory = localStorage.getItem('roleradar_user_profile');
+        if (savedMemory) {
+            try {
+                userProfile = JSON.parse(savedMemory);
+            } catch(e) {}
+        }
 
         const chatForm = document.getElementById('chatForm');
         const chatInput = document.getElementById('chatInput');
@@ -186,8 +200,9 @@
         const jobList = document.getElementById('jobList');
         const toolBadge = document.getElementById('toolBadge');
 
-        // Render initial cards on page load
-        renderJobs(JOB_DATABASE.slice(0, 4));
+        // Render initial state
+        renderJobs(JOB_DATABASE);
+        updateProfile(userProfile);
 
         function quickQuery(text) {
             chatInput.value = text;
@@ -237,60 +252,147 @@
         function runAgentLocally(text) {
             const lower = text.toLowerCase();
             let tools = ["search_jobs"];
+            let memoryUpdated = false;
             
-            // 1. Skill Extraction
-            const techList = ["python", "sql", "react", "fastapi", "docker", "pytorch", "node.js", "go", "aws", "postgres"];
-            let foundSkills = techList.filter(t => lower.includes(t)).map(t => t.toUpperCase());
-            if (foundSkills.length > 0) {
-                foundSkills.forEach(s => {
-                    if (!userProfile.skills.includes(s)) userProfile.skills.push(s);
-                });
-                tools.push("update_user_preferences");
-            }
-
-            // 2. Stipend Extraction
-            let stipendMatch = lower.match(/(\d+)\s*(k|thousand|000)/);
-            if (stipendMatch) {
-                let val = parseInt(stipendMatch[1]);
-                userProfile.min_stipend = val * 1000;
-                tools.push("update_user_preferences");
-            }
-
-            // 3. Filter & Rank Jobs
-            let filtered = JOB_DATABASE.filter(j => {
-                if (lower.includes("remote") && !j.is_remote) return false;
-                if (userProfile.min_stipend && j.stipend < userProfile.min_stipend) {
-                    // Check if specifically queried stipend
-                    if (stipendMatch && j.stipend < (parseInt(stipendMatch[1]) * 1000)) return false;
+            // 1. Candidate Name Detection (e.g. "My name is Rahul", "I am Priya", "I'm Sougata")
+            const nameMatch = text.match(/(?:my name is|i am|i'm|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
+            if (nameMatch && nameMatch[1]) {
+                const detectedName = nameMatch[1].trim();
+                if (!['looking', 'searching', 'interested', 'skilled'].includes(detectedName.toLowerCase())) {
+                    userProfile.name = detectedName;
+                    memoryUpdated = true;
+                    tools.push("update_candidate_identity");
                 }
-                return true;
+            }
+
+            // 2. Comprehensive Skills Extraction (Supports 30+ engineering, AI, frontend, backend, data skills)
+            const ALL_SKILLS = [
+                { pattern: /\bpython\b/i, name: "Python" },
+                { pattern: /\b(sql|mysql|postgres|postgresql)\b/i, name: "SQL" },
+                { pattern: /\b(fastapi|flask|django)\b/i, name: "FastAPI" },
+                { pattern: /\b(react|reactjs|nextjs|next\.js)\b/i, name: "React" },
+                { pattern: /\b(node|nodejs|node\.js|express)\b/i, name: "Node.js" },
+                { pattern: /\b(docker|container|dockerfile)\b/i, name: "Docker" },
+                { pattern: /\b(kubernetes|k8s)\b/i, name: "Kubernetes" },
+                { pattern: /\b(pytorch|tensorflow|keras)\b/i, name: "PyTorch" },
+                { pattern: /\b(llm|llms|generative ai|genai|prompt)\b/i, name: "LLMs" },
+                { pattern: /\b(nlp|natural language)\b/i, name: "NLP" },
+                { pattern: /\b(aws|cloud|gcp|azure)\b/i, name: "AWS" },
+                { pattern: /\b(golang|go)\b/i, name: "Go" },
+                { pattern: /\b(java|spring|springboot)\b/i, name: "Java" },
+                { pattern: /\b(c\+\+|cpp)\b/i, name: "C++" },
+                { pattern: /\b(kafka|redis|rabbitmq)\b/i, name: "Kafka" },
+                { pattern: /\b(snowflake|spark|airflow|etl)\b/i, name: "Airflow" },
+                { pattern: /\b(typescript|javascript|js|ts)\b/i, name: "TypeScript" },
+                { pattern: /\b(linux|bash|shell)\b/i, name: "Linux" }
+            ];
+
+            ALL_SKILLS.forEach(s => {
+                if (s.pattern.test(text)) {
+                    if (!userProfile.skills.includes(s.name)) {
+                        userProfile.skills.push(s.name);
+                        memoryUpdated = true;
+                    }
+                }
             });
 
-            if (filtered.length === 0) filtered = JOB_DATABASE; // Fallback to all
+            // 3. Target City & Location Detection
+            const CITIES = ["Bengaluru", "Mumbai", "Delhi NCR", "Gurugram", "Pune", "Hyderabad", "Noida", "Chennai", "Remote"];
+            CITIES.forEach(city => {
+                if (new RegExp('\\b' + city.replace(' ', '\\s+') + '\\b', 'i').test(text)) {
+                    if (!userProfile.locations.includes(city)) {
+                        userProfile.locations.push(city);
+                        memoryUpdated = true;
+                    }
+                }
+            });
+            if (/\b(remote|wfh|work from home)\b/i.test(text) && !userProfile.locations.includes("Remote")) {
+                userProfile.locations.push("Remote");
+                memoryUpdated = true;
+            }
 
-            // 4. Formulate Response
+            // 4. Stipend Detection (e.g. "50k", "40000", "paying 35k+", "stipend > 60k")
+            const stipendMatch = lower.match(/(?:stipend|paying|above|min|minimum|salary|₹|rs\.?)?\s*(\d{1,3})\s*(k|thousand)/i);
+            const stipendNum = lower.match(/(?:stipend|paying|above|min|minimum|salary|₹|rs\.?)\s*(\d{4,6})/i);
+            if (stipendMatch) {
+                userProfile.min_stipend = parseInt(stipendMatch[1]) * 1000;
+                memoryUpdated = true;
+            } else if (stipendNum) {
+                userProfile.min_stipend = parseInt(stipendNum[1]);
+                memoryUpdated = true;
+            }
+
+            if (memoryUpdated) {
+                tools.push("persist_user_memory");
+                localStorage.setItem('roleradar_user_profile', JSON.stringify(userProfile));
+            }
+
+            // 5. Dynamic Two-Stage Match Scoring & Personalized Re-Ranking
+            let ranked = JOB_DATABASE.map(job => {
+                let score = 0.50; // base score
+                
+                // Skill Overlap Calculation
+                if (userProfile.skills.length > 0) {
+                    let matchingSkills = job.skills_required.filter(req => 
+                        userProfile.skills.some(userSkill => userSkill.toLowerCase() === req.toLowerCase())
+                    );
+                    let overlapRatio = matchingSkills.length / Math.max(1, job.skills_required.length);
+                    score += (overlapRatio * 0.40);
+                }
+
+                // Location matching bonus
+                if (userProfile.locations.length > 0) {
+                    let locMatch = userProfile.locations.some(loc => 
+                        job.location.toLowerCase().includes(loc.toLowerCase()) || 
+                        (loc === "Remote" && job.is_remote)
+                    );
+                    if (locMatch) score += 0.15;
+                }
+
+                // Stipend compliance
+                if (userProfile.min_stipend && job.stipend >= userProfile.min_stipend) {
+                    score += 0.10;
+                }
+
+                let finalPct = Math.min(99, Math.max(65, Math.round(score * 100)));
+                return { ...job, match_pct: finalPct, score: score };
+            });
+
+            // Sort highest match first
+            ranked.sort((a, b) => b.score - a.score);
+
+            // 6. Formulate Adaptive Natural Response
             let reply = "";
+            const candidateGreeting = userProfile.name !== "Candidate" ? ` ${userProfile.name}` : "";
+
             if (lower.includes("what do you know") || lower.includes("who are you") || lower.includes("help")) {
-                reply = "🤖 I am **RoleRadar**, an intelligent career and internship discovery agent!\n\n" +
-                        "• I index opportunities across top tech firms & hyper-growth startups (BrowserStack, Razorpay, Sarvam AI, Postman, etc.).\n" +
-                        "• I compute semantic similarity, tech stack match, and personalized re-ranking.\n" +
-                        "• I remember your skills, preferred cities (Remote, Bengaluru, Mumbai, Delhi NCR, Pune), and stipend preferences.\n\n" +
-                        "Try asking me: *'Remote Python & AI roles above 50k'* or *'Backend engineering in Mumbai or Remote'*!";
-            } else if (lower.includes("hi") || lower.includes("hello")) {
-                reply = "👋 Hey Sougata! Great to connect with you. I've loaded your profile memory. What kind of engineering or AI internship are you targeting?";
+                reply = `🤖 Hello${candidateGreeting}! I am **RoleRadar**, your personalized AI Career Agent.\n\n` +
+                        `• **Your Profile Memory:** ${userProfile.skills.length > 0 ? userProfile.skills.join(', ') : 'No skills recorded yet'}\n` +
+                        `• **Preferred Locations:** ${userProfile.locations.length > 0 ? userProfile.locations.join(', ') : 'Open to any'}\n` +
+                        `• **Min Stipend:** ${userProfile.min_stipend ? '₹' + userProfile.min_stipend.toLocaleString() + '/mo' : 'Any'}\n\n` +
+                        `Tell me your stack (e.g. *"I am Rahul and I know Python, Docker, and SQL, looking for Remote >50k"*), and I will update your memory and rank real matches for you!`;
+            } else if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey")) {
+                reply = `👋 Hey${candidateGreeting}! I'm ready to match you with top engineering roles. Tell me your skills, preferred cities, or target stipend!`;
             } else {
-                let top = filtered[0];
-                reply = `🎯 Found **${filtered.length} matching internships** for your request:\n\n` +
-                        `⭐ **Top Pick: ${top.title} at ${top.company}**\n` +
+                let top = ranked[0];
+                let memorySummary = [];
+                if (userProfile.skills.length > 0) memorySummary.push(`Skills: **${userProfile.skills.join(', ')}**`);
+                if (userProfile.locations.length > 0) memorySummary.push(`Location: **${userProfile.locations.join(', ')}**`);
+                if (userProfile.min_stipend) memorySummary.push(`Min Stipend: **₹${userProfile.min_stipend.toLocaleString()}/mo**`);
+
+                let memText = memorySummary.length > 0 ? `\n🧠 *Updated your profile memory with:* ${memorySummary.join(' | ')}\n` : '';
+
+                reply = `🎯 Found **${ranked.length} ranked opportunities** tailored to you${candidateGreeting}:${memText}\n` +
+                        `⭐ **Top Recommendation: ${top.title} at ${top.company}**\n` +
                         `📍 Location: ${top.location} ${top.is_remote ? '(Remote Available 🌐)' : ''}\n` +
-                        `💰 Stipend: ₹${top.stipend.toLocaleString()}/month | 📊 **${top.match_pct}% Match**\n` +
-                        `🛠️ Tech: ${top.skills_required.join(', ')}\n\n` +
-                        `Ranked recommendations have been updated on the right panel!`;
+                        `💰 Stipend: ₹${top.stipend.toLocaleString()}/month | 📊 **${top.match_pct}% Profile Match**\n` +
+                        `🛠️ Required Tech: ${top.skills_required.join(', ')}\n\n` +
+                        `Check the ranked cards on the right. Mention any additional skills or preferences to re-rank in real time!`;
             }
 
             toolBadge.innerText = `Tools: ${tools.join(', ')}`;
             appendMessage('agent', reply);
-            renderJobs(filtered);
+            renderJobs(ranked);
             updateProfile(userProfile);
         }
 
@@ -357,8 +459,31 @@
 
         function updateProfile(prof) {
             if (!prof) return;
-            if (prof.skills) document.getElementById('memSkills').innerText = Array.isArray(prof.skills) ? prof.skills.join(', ') : prof.skills;
-            if (prof.min_stipend) document.getElementById('memStipend').innerText = `₹${prof.min_stipend.toLocaleString()}/mo`;
+            const nameEl = document.getElementById('memName');
+            const skillsEl = document.getElementById('memSkills');
+            const stipendEl = document.getElementById('memStipend');
+            const locEl = document.getElementById('memLoc');
+
+            if (nameEl) nameEl.innerText = prof.name && prof.name !== "Candidate" ? prof.name : "You (Guest Job Seeker)";
+            if (skillsEl) {
+                if (prof.skills && prof.skills.length > 0) {
+                    skillsEl.innerText = Array.isArray(prof.skills) ? prof.skills.join(', ') : prof.skills;
+                    skillsEl.className = "font-semibold text-amber-400";
+                } else {
+                    skillsEl.innerText = "None detected yet (Tell me your tech stack!)";
+                    skillsEl.className = "font-normal text-slate-500 italic";
+                }
+            }
+            if (stipendEl) {
+                stipendEl.innerText = prof.min_stipend ? `₹${prof.min_stipend.toLocaleString()}/mo` : "Flexible (Any)";
+            }
+            if (locEl) {
+                if (prof.locations && prof.locations.length > 0) {
+                    locEl.innerText = Array.isArray(prof.locations) ? prof.locations.join(', ') : prof.locations;
+                } else {
+                    locEl.innerText = "Open to Any / Remote";
+                }
+            }
         }
     </script>
 </body>
