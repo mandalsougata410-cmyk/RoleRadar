@@ -1,8 +1,9 @@
 import os
 import json
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+import database
 from database import init_db, get_db_connection
 from seed_data import seed_database
 from models import ChatRequest, ChatResponse, InteractionRequest
@@ -31,9 +32,21 @@ def on_startup():
 # init_db()
 # seed_database()
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "service": "RoleRadar AI Agent"}
+@app.get("/api/debug")
+def debug_endpoint():
+    import traceback
+    logs = []
+    try:
+        logs.append(f"DB_FILE: {database.DB_FILE}")
+        init_db()
+        logs.append("init_db success")
+        seed_database()
+        logs.append("seed_database success")
+        res = handle_user_chat("student_user_1", "Remote Python internships")
+        logs.append("handle_user_chat success: " + str(len(res.get("matched_jobs", []))) + " jobs")
+        return {"status": "ok", "logs": logs}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "trace": traceback.format_exc(), "logs": logs}
 
 @app.post("/api/chat")
 async def chat_endpoint(req: dict):
