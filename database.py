@@ -2,16 +2,18 @@ import os
 import json
 import sqlite3
 import math
+import tempfile
 from typing import List, Dict, Any, Optional
 
-# On Vercel serverless, /tmp is writable
+# On Vercel serverless, ensure writable database in temp directory
 if os.environ.get("VERCEL"):
-    DB_FILE = "/tmp/roleradar.db"
+    DB_FILE = os.path.join(tempfile.gettempdir(), "roleradar.db")
 else:
     DB_FILE = os.path.join(os.path.dirname(__file__), "roleradar.db")
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_FILE)
+    # check_same_thread=False allows FastAPI multi-threaded request workers
+    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
