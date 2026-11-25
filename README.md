@@ -6,6 +6,7 @@
 
 ## 🚀 Key Highlights & Architecture
 - **Multi-Turn Agent with Tool Use:** Extracts student intent into strict **Pydantic schemas** (`search_jobs`, `update_user_preferences`, `explain_job_fit`).
+- **Interactive Voice Assistant (STT & TTS):** Speak directly with the career agent via Web Speech API recognition; hears natural queries and responds with audible voice narration.
 - **PostgreSQL / SQLite + pgvector Schema:** Tables for `users`, `jobs`, `chat_messages` (persistent conversation memory), and `job_interactions` (for personalization).
 - **Two-Stage Hybrid Search & Re-Ranking:**
   - **Stage 1 (SQL Filters):** Location, remote flag, minimum stipend constraints.

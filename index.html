@@ -24,9 +24,14 @@
             </div>
         </div>
         <div class="flex items-center space-x-4">
+            <!-- Voice Assistant Mode Toggle -->
+            <button id="voiceToggleBtn" onclick="toggleVoiceOutput()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                <span id="speakerIcon">🔊</span>
+                <span id="voiceStatusText">Voice Output: ON</span>
+            </button>
             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-                FastAPI + Hybrid Search Engine
+                FastAPI + Hybrid Search
             </span>
             <a href="https://github.com/mandalsougata410-cmyk/RoleRadar" target="_blank" class="text-xs text-slate-400 hover:text-white underline">GitHub Code</a>
         </div>
@@ -51,11 +56,24 @@
                 </div>
             </div>
 
-            <!-- Input Bar -->
+            <!-- Input Bar with Mic Button -->
             <div class="p-4 border-t border-slate-800 bg-slate-900/60">
-                <form id="chatForm" class="flex space-x-2">
-                    <input id="chatInput" type="text" placeholder="Type anything, e.g. 'Remote Python roles above 50k'..." 
+                <form id="chatForm" class="flex items-center space-x-2">
+                    <input id="chatInput" type="text" placeholder="Type or click the microphone to talk..." 
                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition placeholder-slate-500 text-slate-100">
+                    
+                    <!-- Microphone Speech-to-Text Button -->
+                    <button type="button" id="micBtn" onclick="toggleListening()" title="Speak with Voice Assistant"
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition flex items-center justify-center shrink-0">
+                        <svg id="micIcon" class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                        <span id="listeningPulse" class="hidden relative flex h-3 w-3 -mr-1 -mt-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                        </span>
+                    </button>
+
                     <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
                         Send
                     </button>
@@ -179,12 +197,110 @@
         ];
 
         // Dynamic User Profile Memory (Persisted in browser localStorage across sessions)
-        let userProfile = {
-            name: "Candidate",
-            skills: [],
-            min_stipend: null,
-            locations: []
-        };
+        // ================= VOICE ASSISTANT ENGINE (STT & TTS) =================
+        let voiceOutputEnabled = true;
+        let isListening = false;
+        let recognition = null;
+
+        // Initialize Speech Recognition (Supported in Chrome, Edge, Safari, Opera, Android)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('micBtn').className = "bg-rose-500/20 text-rose-400 border border-rose-500/40 p-2.5 rounded-xl transition flex items-center justify-center shrink-0";
+                document.getElementById('listeningPulse').classList.remove('hidden');
+                document.getElementById('chatInput').placeholder = "Listening... Speak your tech stack or question!";
+            };
+
+            recognition.onresult = (event) => {
+                const speechResult = event.results[0][0].transcript;
+                document.getElementById('chatInput').value = speechResult;
+                processUserMessage(speechResult);
+                document.getElementById('chatInput').value = '';
+            };
+
+            recognition.onerror = (event) => {
+                console.warn("Speech recognition error:", event.error);
+                stopListeningUI();
+            };
+
+            recognition.onend = () => {
+                stopListeningUI();
+            };
+        }
+
+        function toggleListening() {
+            if (!recognition) {
+                alert("Voice input is supported in Google Chrome, Microsoft Edge, Safari, and Android browsers!");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+                stopListeningUI();
+            } else {
+                try {
+                    recognition.start();
+                } catch(e) {
+                    recognition.stop();
+                }
+            }
+        }
+
+        function stopListeningUI() {
+            isListening = false;
+            document.getElementById('micBtn').className = "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition flex items-center justify-center shrink-0";
+            document.getElementById('listeningPulse').classList.add('hidden');
+            document.getElementById('chatInput').placeholder = "Type or click the microphone to talk...";
+        }
+
+        function toggleVoiceOutput() {
+            voiceOutputEnabled = !voiceOutputEnabled;
+            const statusText = document.getElementById('voiceStatusText');
+            const icon = document.getElementById('speakerIcon');
+            if (voiceOutputEnabled) {
+                statusText.innerText = "Voice Output: ON";
+                icon.innerText = "🔊";
+                speakAgentReply("Voice output is now enabled.");
+            } else {
+                statusText.innerText = "Voice Output: OFF";
+                icon.innerText = "🔇";
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        // Clean markdown symbols like asterisks, emojis for smooth natural speech
+        function speakAgentReply(text) {
+            if (!voiceOutputEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); // cancel any active speech
+
+            let cleanText = text
+                .replace(/\*+/g, '')
+                .replace(/[•⭐🎯📍💰📊🛠️🤖👋🧠🔥⚡]/g, '')
+                .replace(/https?:\/\/\S+/g, '')
+                .replace(/\n+/g, '. ');
+
+            // Speak natural first 2 concise sentences so user isn't overwhelmed
+            let sentences = cleanText.split('. ').filter(s => s.trim().length > 0);
+            let speechString = sentences.slice(0, 3).join('. ');
+
+            const utterance = new SpeechSynthesisUtterance(speechString);
+            utterance.rate = 1.05;
+            utterance.pitch = 1.0;
+            utterance.lang = 'en-US';
+
+            // Pick a smooth natural voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            window.speechSynthesis.speak(utterance);
+        }
+        // ======================================================================
 
         // Load existing saved memory if candidate visited previously
         const savedMemory = localStorage.getItem('roleradar_user_profile');
@@ -394,6 +510,7 @@
             appendMessage('agent', reply);
             renderJobs(ranked);
             updateProfile(userProfile);
+            speakAgentReply(reply);
         }
 
         function appendMessage(sender, text) {
