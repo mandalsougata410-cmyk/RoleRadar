@@ -27,6 +27,10 @@ def on_startup():
     init_db()
     seed_database()
 
+# For serverless invocations where startup events might not fire eagerly
+init_db()
+seed_database()
+
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "RoleRadar AI Agent"}
