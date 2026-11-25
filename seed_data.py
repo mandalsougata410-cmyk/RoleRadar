@@ -103,10 +103,14 @@ def seed_database():
     cursor = conn.cursor()
     
     # Check if already seeded
-    cursor.execute("SELECT COUNT(*) as count FROM jobs")
-    if cursor.fetchone()["count"] > 0:
-        conn.close()
-        return
+    try:
+        cursor.execute("SELECT COUNT(*) as count FROM jobs")
+        row = cursor.fetchone()
+        if row and row["count"] > 0:
+            conn.close()
+            return
+    except Exception:
+        pass
         
     random.seed(42)
     # Generate mock 768-dim normalized embedding vectors for deterministic testing
