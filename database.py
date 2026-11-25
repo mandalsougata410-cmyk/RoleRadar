@@ -4,7 +4,11 @@ import sqlite3
 import math
 from typing import List, Dict, Any, Optional
 
-DB_FILE = os.path.join(os.path.dirname(__file__), "roleradar.db")
+# On Vercel serverless, /tmp is writable
+if os.environ.get("VERCEL"):
+    DB_FILE = "/tmp/roleradar.db"
+else:
+    DB_FILE = os.path.join(os.path.dirname(__file__), "roleradar.db")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
