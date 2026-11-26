@@ -5,22 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RoleRadar — AI Career & Internship Agent</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
     <!-- Navbar -->
-    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+    <header class="border-b border-slate-800 bg-slate-900/70 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-            <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-bold text-slate-950 text-xl shadow-lg shadow-orange-500/20">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 flex items-center justify-center font-bold text-slate-950 text-xl shadow-lg shadow-orange-500/20">
                 ⚡
             </div>
             <div>
-                <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">RoleRadar</h1>
-                <p class="text-xs text-slate-400">Conversational AI Career Agent</p>
+                <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">RoleRadar</h1>
+                <p class="text-xs text-slate-400">Conversational AI Career Agent • Pan-India & Remote Hub</p>
             </div>
         </div>
         <div class="flex items-center space-x-4">
@@ -33,37 +39,41 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         <!-- Left: Chat Interface (7 cols) -->
         <div class="lg:col-span-7 flex flex-col bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
             <div class="p-4 border-b border-slate-800/80 bg-slate-900/80 flex justify-between items-center">
                 <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">Agent Conversation & Memory</span>
-                <span id="toolBadge" class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Tools: search_jobs, rank_candidates</span>
+                <span id="toolBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">Tools: search_jobs, rank_candidates</span>
             </div>
 
             <div id="chatBox" class="flex-1 p-4 overflow-y-auto space-y-4 max-h-[60vh]">
                 <div class="flex items-start space-x-3">
                     <div class="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">AI</div>
                     <div class="bg-slate-800/70 p-3.5 rounded-2xl rounded-tl-none border border-slate-700/50 max-w-md text-sm leading-relaxed text-slate-200">
-                        Hey! I'm your AI career agent. Tell me what kind of internship you're aiming for (e.g. <em>"Show me remote Python/AI internships paying ₹50k+"</em>) and I'll match and rank them for you!
+                        Hey! I'm your AI career agent. Tell me what kind of internship you're aiming for (e.g. <em>"Show me roles in Kolkata, Hyderabad, or remote Python >50k"</em>) and I'll match, rank, and provide full background on every company!
                     </div>
                 </div>
             </div>
 
-            <!-- Input Bar -->
+            <!-- Input Bar & Quick Filters -->
             <div class="p-4 border-t border-slate-800 bg-slate-900/60">
                 <form id="chatForm" class="flex space-x-2">
-                    <input id="chatInput" type="text" placeholder="Ask e.g. 'Show me remote Python roles with high stipend'..." 
+                    <input id="chatInput" type="text" placeholder="Ask e.g. 'Show me Kolkata or Hyderabad roles', 'Remote Python >50k'..." 
                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition placeholder-slate-500 text-slate-100">
                     <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
                         Send
                     </button>
                 </form>
-                <div class="flex flex-wrap gap-2 mt-2.5">
-                    <button onclick="quickQuery('Remote Python & AI internships paying above 50k')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">⚡ Remote Python >50k</button>
-                    <button onclick="quickQuery('High growth tech startups across India')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">📍 Pan-India & Remote Roles</button>
-                    <button onclick="quickQuery('I know React, Docker, and FastAPI')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">🧠 Update Skills</button>
+
+                <!-- City & Query Quick Pills -->
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button onclick="quickQuery('Internships in Kolkata Salt Lake Sector V and New Town')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white border border-amber-500/20 transition">📍 Kolkata (Salt Lake / Remote)</button>
+                    <button onclick="quickQuery('Product startups in Hyderabad HITEC City')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 hover:text-white border border-sky-500/20 transition">📍 Hyderabad (HITEC City)</button>
+                    <button onclick="quickQuery('Remote Python & AI internships paying above 50k')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 hover:text-white border border-emerald-500/20 transition">🌐 Remote Python >50k</button>
+                    <button onclick="quickQuery('Pune and Western India cloud roles')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">📍 Pune & Enterprise SaaS</button>
+                    <button onclick="quickQuery('Tier 2 and regional tech hubs like Jaipur, Bhubaneswar, Chandigarh')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition">🏙️ Regional Indian Hubs</button>
                 </div>
             </div>
         </div>
@@ -71,7 +81,7 @@
         <!-- Right: Ranked Recommendations & Profile (5 cols) -->
         <div class="lg:col-span-5 flex flex-col space-y-4">
             
-            <!-- User Memory Card (Dynamically updated from user input) -->
+            <!-- User Memory Card -->
             <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Live Candidate Profile Memory</h3>
@@ -87,12 +97,14 @@
 
             <!-- Matched Internships Cards -->
             <div class="flex-1 bg-slate-900/40 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur flex flex-col">
-                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 flex justify-between items-center">
-                    <span>Ranked Recommendations</span>
-                    <span id="matchCount" class="text-slate-500 font-normal">0 items</span>
-                </h3>
+                <div class="mb-3 flex justify-between items-center">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Ranked Opportunities & Company Dossier
+                    </h3>
+                    <span id="matchCount" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-amber-400 border border-slate-700">0 items</span>
+                </div>
                 
-                <div id="jobList" class="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[50vh]">
+                <div id="jobList" class="flex-1 overflow-y-auto space-y-3.5 pr-1 max-h-[55vh]">
                     <!-- populated list -->
                 </div>
             </div>
@@ -102,79 +114,304 @@
     </main>
 
     <script>
-        // Internship Database inside Client & API Engine
+        // Expanded Internship Database with Indian Hubs (Kolkata, Hyderabad, Pune, Bengaluru, Jaipur, Bhubaneswar, etc.) and About Company Info
         const JOB_DATABASE = [
+            // --- KOLKATA & EASTERN REGION ---
             {
                 id: 1,
-                title: "Software Engineering Intern",
-                company: "BrowserStack",
-                location: "Mumbai / Remote",
+                title: "Cybersecurity & Network Systems Intern",
+                company: "Vehere",
+                location: "Kolkata (Salt Lake Sector V) / Remote",
                 is_remote: true,
-                stipend: 65000,
-                skills_required: ["Python", "FastAPI", "SQL", "Docker", "Linux"],
-                requirements_text: "Build scalable cloud infrastructure test runners and developer telemetry pipelines. Design modular backend APIs.",
+                stipend: 55000,
+                skills_required: ["Python", "C++", "Linux", "Networking", "Docker"],
+                requirements_text: "Develop packet inspection modules, network telemetry pipelines, and threat-hunting microservices for enterprise NDR platforms.",
+                about_company: "Vehere is a premier cybersecurity pioneer headquartered in Kolkata (Salt Lake Sector V). It specializes in AI-powered Network Detection & Response (NDR), Cyber Situational Awareness, and enterprise packet intelligence for national security agencies and Fortune 500 enterprises.",
                 score: 0.95,
                 match_pct: 95
             },
             {
                 id: 2,
-                title: "AI & ML Systems Intern",
-                company: "Sarvam AI",
-                location: "Bengaluru / Hybrid",
+                title: "AI & Decision Analytics Intern",
+                company: "Tredence Analytics",
+                location: "Kolkata (Sector V) / Remote",
                 is_remote: true,
-                stipend: 70000,
-                skills_required: ["Python", "PyTorch", "NLP", "LLMs", "Vector DB"],
-                requirements_text: "Fine-tune open-source models, curate multilingual speech and text datasets, and build evaluation pipelines.",
+                stipend: 50000,
+                skills_required: ["Python", "SQL", "PyTorch", "Pandas", "Scikit-Learn"],
+                requirements_text: "Build predictive machine learning models, supply chain demand forecasting algorithms, and customer analytics pipelines.",
+                about_company: "Tredence Analytics is a global data science solutions company operating major delivery labs in Kolkata (Victoria Park, Salt Lake Sector V) and Bengaluru. It bridges the gap between deep analytics and real-world business execution for global retail, CPG, and healthcare giants.",
                 score: 0.92,
                 match_pct: 92
             },
             {
                 id: 3,
+                title: "Full Stack Cloud Intern",
+                company: "Indus Net Technologies (INT)",
+                location: "Kolkata (New Town / Ecospace) / Hybrid",
+                is_remote: true,
+                stipend: 38000,
+                skills_required: ["React", "Node.js", "TypeScript", "PostgreSQL", "AWS"],
+                requirements_text: "Design scalable enterprise SaaS interfaces, microservices, and secure digital banking portals using modern cloud-native architectures.",
+                about_company: "Indus Net Technologies (INT) is an award-winning digital transformation and product innovation powerhouse operating from Ecospace Business Park, New Town, Kolkata. INT designs high-throughput digital banking, fintech, and enterprise cloud systems across 20+ countries.",
+                score: 0.88,
+                match_pct: 88
+            },
+            {
+                id: 4,
+                title: "Fintech Backend Engineer Intern",
+                company: "Senrysa Technologies",
+                location: "Kolkata (Salt Lake) / Remote",
+                is_remote: true,
+                stipend: 42000,
+                skills_required: ["Java", "Spring Boot", "SQL", "Microservices", "REST APIs"],
+                requirements_text: "Build resilient high-availability financial inclusion payment switches, biometric auth APIs, and core transactional databases.",
+                about_company: "Senrysa Technologies is an eastern India fintech software leader based in Kolkata. It powers rural banking, Aadhaar-enabled payment systems (AePS), and smart-card transactional architectures impacting over 50 million citizens.",
+                score: 0.86,
+                match_pct: 86
+            },
+
+            // --- HYDERABAD ---
+            {
+                id: 5,
+                title: "AI & Autonomous Finance Intern",
+                company: "HighRadius",
+                location: "Hyderabad (HITEC City / Madhapur)",
+                is_remote: true,
+                stipend: 65000,
+                skills_required: ["Python", "FastAPI", "SQL", "Machine Learning", "Docker"],
+                requirements_text: "Develop autonomous accounting agents, cash flow prediction models, and real-time ledger data synchronization services.",
+                about_company: "HighRadius is a global SaaS unicorn headquartered in Hyderabad (HITEC City). Powered by its proprietary 'Rivana AI' engine, HighRadius automates order-to-cash, treasury, and autonomous financial reconciliation for multinational corporations.",
+                score: 0.94,
+                match_pct: 94
+            },
+            {
+                id: 6,
+                title: "SaaS Platform Engineering Intern",
+                company: "Darwinbox",
+                location: "Hyderabad (Madhapur) / Remote",
+                is_remote: true,
+                stipend: 60000,
+                skills_required: ["Python", "Go", "PostgreSQL", "Kafka", "Redis"],
+                requirements_text: "Build distributed HR-tech enterprise services, event-driven notification systems, and high-load database indexing layers.",
+                about_company: "Darwinbox is an enterprise HR-tech unicorn backed by Salesforce Ventures, headquartered in Hyderabad. It delivers mobile-first, AI-driven human capital management to over 850 global enterprises and 2.5 million employees worldwide.",
+                score: 0.91,
+                match_pct: 91
+            },
+            {
+                id: 7,
+                title: "Aerospace Flight Software Intern",
+                company: "Skyroot Aerospace",
+                location: "Hyderabad (Gachibowli / T-Hub)",
+                is_remote: false,
+                stipend: 50000,
+                skills_required: ["C++", "Python", "Linux", "Embedded Systems", "Algorithms"],
+                requirements_text: "Develop telemetry data ingestion daemons, hardware-in-the-loop simulation software, and rocket flight computer control logic.",
+                about_company: "Skyroot Aerospace is India's pioneer private space-tech company headquartered in Hyderabad. It made history launching India's first privately developed rocket (Vikram-S) and builds flexible, on-demand satellite orbital launch vehicles.",
+                score: 0.89,
+                match_pct: 89
+            },
+            {
+                id: 8,
+                title: "Cloud Platform Architect Intern",
+                company: "Zenoti",
+                location: "Hyderabad / Remote",
+                is_remote: true,
+                stipend: 58000,
+                skills_required: ["React", "C#", ".NET", "Azure", "SQL"],
+                requirements_text: "Design multi-tenant enterprise booking microservices, real-time calendar syncing, and POS cloud payment integrations.",
+                about_company: "Zenoti is an enterprise cloud SaaS unicorn founded in Hyderabad. It provides an all-in-one management, booking, and POS software platform powering thousands of luxury spas, salons, and wellness centers worldwide.",
+                score: 0.87,
+                match_pct: 87
+            },
+
+            // --- PUNE & WESTERN INDIA ---
+            {
+                id: 9,
+                title: "Cloud Data Resilience Intern",
+                company: "Druva",
+                location: "Pune (Baner) / Remote",
+                is_remote: true,
+                stipend: 60000,
+                skills_required: ["Python", "AWS", "Docker", "Linux", "Distributed Systems"],
+                requirements_text: "Implement cloud backup replication microservices, snapshot deduplication algorithms, and ransomware threat telemetry.",
+                about_company: "Druva is a 100% SaaS-based cloud data protection and cyber-resilience unicorn with primary Indian engineering headquarters in Pune. It protects mission-critical enterprise workloads across AWS, Microsoft 365, and multi-cloud environments.",
+                score: 0.90,
+                match_pct: 90
+            },
+            {
+                id: 10,
+                title: "Enterprise AI & Contract Intelligence Intern",
+                company: "Icertis",
+                location: "Pune / Remote",
+                is_remote: true,
+                stipend: 62000,
+                skills_required: ["Python", "FastAPI", "NLP", "Azure", "PostgreSQL"],
+                requirements_text: "Build semantic contract parsing pipelines, clause extraction with generative AI, and compliance evaluation engines.",
+                about_company: "Icertis is the global leader in AI-powered Contract Lifecycle Management (CLM) headquartered between Pune and Bellevue, WA. It transforms enterprise contracts into structured, actionable business intelligence for Fortune 100 enterprises.",
+                score: 0.89,
+                match_pct: 89
+            },
+            {
+                id: 11,
+                title: "Cybersecurity & Endpoint Protection Intern",
+                company: "Quick Heal Technologies",
+                location: "Pune (Shivaji Nagar) / Hybrid",
+                is_remote: false,
+                stipend: 45000,
+                skills_required: ["C++", "Python", "Windows Internals", "Linux", "Reverse Engineering"],
+                requirements_text: "Develop heuristic malware detection engines, kernel-level behavioral monitors, and automated threat intelligence feeds.",
+                about_company: "Quick Heal Technologies is India's premier homegrown cybersecurity software pioneer based in Pune. It builds antivirus, endpoint security, and enterprise data encryption products protecting millions of users globally.",
+                score: 0.82,
+                match_pct: 82
+            },
+
+            // --- BENGALURU & PAN-INDIA HUBS ---
+            {
+                id: 12,
+                title: "Software Engineering Intern",
+                company: "BrowserStack",
+                location: "Bengaluru / Mumbai / Remote",
+                is_remote: true,
+                stipend: 65000,
+                skills_required: ["Python", "FastAPI", "SQL", "Docker", "Linux"],
+                requirements_text: "Build scalable cloud infrastructure test runners and developer telemetry pipelines. Design modular backend APIs.",
+                about_company: "BrowserStack is the world's leading cloud web & mobile testing platform, supporting over 2 million tests daily. It gives developers instant access to thousands of real devices and browsers directly in the cloud.",
+                score: 0.95,
+                match_pct: 95
+            },
+            {
+                id: 13,
+                title: "AI & Multilingual LLM Intern",
+                company: "Sarvam AI",
+                location: "Bengaluru / Hybrid",
+                is_remote: true,
+                stipend: 70000,
+                skills_required: ["Python", "PyTorch", "NLP", "LLMs", "Vector DB"],
+                requirements_text: "Fine-tune open-source models, curate multilingual speech and Indian language datasets, and build evaluation pipelines.",
+                about_company: "Sarvam AI is India's sovereign AI research organization building full-stack foundational generative models and speech-to-text systems tailored specifically for Indian languages and enterprise use cases.",
+                score: 0.93,
+                match_pct: 93
+            },
+            {
+                id: 14,
                 title: "Backend Engineering Intern",
                 company: "Razorpay",
                 location: "Bengaluru / Remote",
                 is_remote: true,
                 stipend: 60000,
                 skills_required: ["Go", "Python", "PostgreSQL", "Kafka", "Docker"],
-                requirements_text: "Design high-throughput payment webhook consumers, optimize database indexes, and build resilient microservices.",
-                score: 0.89,
-                match_pct: 89
+                requirements_text: "Design scalable RESTful APIs, optimize high-throughput database queries, and manage microservices.",
+                about_company: "Razorpay is India's premier fintech payments unicorn based in Bengaluru. It powers online payment gateways, automated settlements, banking, and payroll infrastructure for millions of businesses across India.",
+                score: 0.90,
+                match_pct: 90
             },
             {
-                id: 4,
-                title: "Full Stack Engineer Intern",
+                id: 15,
+                title: "Developer Tooling & API Intern",
                 company: "Postman",
                 location: "Bengaluru / Remote",
                 is_remote: true,
-                stipend: 55000,
-                skills_required: ["React", "Node.js", "TypeScript", "PostgreSQL"],
+                stipend: 60000,
+                skills_required: ["React", "TypeScript", "Node.js", "Electron", "PostgreSQL"],
                 requirements_text: "Develop intuitive collaborative developer workspaces, WebSocket syncing, and performant UI components.",
-                score: 0.86,
-                match_pct: 86
+                about_company: "Postman is the globally dominant API collaboration and development platform used by over 30 million software engineers. It streamlines API lifecycle design, mocking, testing, and continuous monitoring.",
+                score: 0.88,
+                match_pct: 88
             },
             {
-                id: 5,
-                title: "Data Engineering Intern",
+                id: 16,
+                title: "Data Engineering & Pipeline Intern",
                 company: "Zepto",
-                location: "Mumbai / Pune",
+                location: "Bengaluru / Mumbai",
                 is_remote: false,
                 stipend: 55000,
                 skills_required: ["Python", "SQL", "Snowflake", "Airflow", "Spark"],
                 requirements_text: "Build real-time ETL data pipelines, monitor warehouse performance, and write complex analytics queries.",
+                about_company: "Zepto is India's hyper-growth 10-minute quick commerce unicorn, operating dark stores and AI-driven inventory prediction networks across all major Indian metropolitan areas.",
+                score: 0.85,
+                match_pct: 85
+            },
+            {
+                id: 17,
+                title: "Healthcare Cloud SaaS Intern",
+                company: "CareStack",
+                location: "Kochi (Infopark) / Remote",
+                is_remote: true,
+                stipend: 45000,
+                skills_required: ["C#", ".NET", "React", "SQL Server", "Azure"],
+                requirements_text: "Engineer clinical workflow management systems, patient scheduling engines, and automated insurance claims processing.",
+                about_company: "CareStack is a flagship health-tech SaaS company originating from Infopark Kochi. It delivers a modern, cloud-based practice management platform for dental healthcare practices throughout North America.",
                 score: 0.83,
                 match_pct: 83
             },
+
+            // --- DELHI NCR & GURUGRAM ---
             {
-                id: 6,
-                title: "Cloud & DevOps Intern",
+                id: 18,
+                title: "Generative Video AI Intern",
+                company: "InVideo",
+                location: "Mumbai / Delhi NCR / Remote",
+                is_remote: true,
+                stipend: 60000,
+                skills_required: ["Python", "FastAPI", "OpenAI", "Prompt Engineering", "SQL"],
+                requirements_text: "Build agentic video scripting workflows, parse structured output schemas, and evaluate prompt variations.",
+                about_company: "InVideo is an intuitive generative AI video creation platform serving millions of content creators worldwide. It turns plain text prompts into full-production video assets with synchronized voiceovers and scenes.",
+                score: 0.88,
+                match_pct: 88
+            },
+            {
+                id: 19,
+                title: "Full Stack Platform Intern",
                 company: "Urban Company",
-                location: "Gurugram / Delhi NCR",
-                is_remote: false,
+                location: "Gurugram / Remote",
+                is_remote: true,
                 stipend: 50000,
-                skills_required: ["Docker", "Kubernetes", "AWS", "Python", "CI/CD"],
-                requirements_text: "Automate service deployments, monitor Kubernetes pod health, and optimize container build caches.",
-                score: 0.80,
-                match_pct: 80
+                skills_required: ["Python", "Django", "React", "Redis", "PostgreSQL"],
+                requirements_text: "Develop partner dispatch algorithms and implement Redis caching for high availability.",
+                about_company: "Urban Company is Asia's largest home services marketplace unicorn based in Gurugram, connecting millions of verified service professionals with urban households using precision matchmaking algorithms.",
+                score: 0.84,
+                match_pct: 84
+            },
+
+            // --- REGIONAL HUBS (JAIPUR, BHUBANESWAR, CHANDIGARH) ---
+            {
+                id: 20,
+                title: "Automotive AI & Marketplace Intern",
+                company: "CarDekho",
+                location: "Jaipur / Gurugram / Remote",
+                is_remote: true,
+                stipend: 48000,
+                skills_required: ["Python", "Django", "React", "SQL", "AWS"],
+                requirements_text: "Develop auto-valuation pricing ML models, customer recommendation engines, and inventory management APIs.",
+                about_company: "CarDekho (GirnarSoft) is North India's premier automotive tech unicorn headquartered in Jaipur. It operates CarDekho, ZigWheels, and insurtech platforms driving automotive discovery and commerce across India and Southeast Asia.",
+                score: 0.85,
+                match_pct: 85
+            },
+            {
+                id: 21,
+                title: "Civic-Tech & Enterprise Platform Intern",
+                company: "CSM Technologies",
+                location: "Bhubaneswar (InfoCity) / Hybrid",
+                is_remote: true,
+                stipend: 40000,
+                skills_required: ["Java", "Spring Boot", "Angular", "PostgreSQL", "Docker"],
+                requirements_text: "Design digital public infrastructure, mining governance systems, and large-scale government enterprise web portals.",
+                about_company: "CSM Technologies is a digital transformation pioneer headquartered in Bhubaneswar (InfoCity). It crafts mission-critical civic-tech, e-governance platforms, and logistics tracking for governments across India and Africa.",
+                score: 0.82,
+                match_pct: 82
+            },
+            {
+                id: 22,
+                title: "HealthTech & Preventive AI Intern",
+                company: "Fitelo",
+                location: "Chandigarh / Remote",
+                is_remote: true,
+                stipend: 42000,
+                skills_required: ["React Native", "Node.js", "Python", "MongoDB", "Firebase"],
+                requirements_text: "Develop conversational nutrition habit tracking features, automated diet plan recommenders, and seamless user health logging.",
+                about_company: "Fitelo is a fast-growing digital health and nutrition wellness startup headquartered in Chandigarh. It provides AI-assisted, personalized diet and lifestyle management apps to hundreds of thousands of users globally.",
+                score: 0.81,
+                match_pct: 81
             }
         ];
 
@@ -232,7 +469,7 @@
             const nameMatch = text.match(/(?:my name is|i am|i'm|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
             if (nameMatch && nameMatch[1]) {
                 const detectedName = nameMatch[1].trim();
-                if (!['looking', 'searching', 'interested', 'skilled'].includes(detectedName.toLowerCase())) {
+                if (!['looking', 'searching', 'interested', 'skilled', 'based'].includes(detectedName.toLowerCase())) {
                     userProfile.name = detectedName;
                     memoryUpdated = true;
                     tools.push("update_candidate_identity");
@@ -255,10 +492,11 @@
                 { pattern: /\b(golang|go)\b/i, name: "Go" },
                 { pattern: /\b(java|spring|springboot)\b/i, name: "Java" },
                 { pattern: /\b(c\+\+|cpp)\b/i, name: "C++" },
+                { pattern: /\b(c#|\.net)\b/i, name: ".NET" },
                 { pattern: /\b(kafka|redis|rabbitmq)\b/i, name: "Kafka" },
                 { pattern: /\b(snowflake|spark|airflow|etl)\b/i, name: "Airflow" },
                 { pattern: /\b(typescript|javascript|js|ts)\b/i, name: "TypeScript" },
-                { pattern: /\b(linux|bash|shell)\b/i, name: "Linux" }
+                { pattern: /\b(linux|bash|shell|networking)\b/i, name: "Linux" }
             ];
 
             ALL_SKILLS.forEach(s => {
@@ -270,17 +508,23 @@
                 }
             });
 
-            // 3. Target City & Location Detection
-            const CITIES = ["Bengaluru", "Mumbai", "Delhi NCR", "Gurugram", "Pune", "Hyderabad", "Noida", "Chennai", "Remote"];
+            // 3. Indian Cities, Remote & Regional Hubs Detection
+            const CITIES = [
+                "Kolkata", "Salt Lake", "New Town", "Hyderabad", "HITEC City", 
+                "Bengaluru", "Bangalore", "Mumbai", "Pune", "Delhi NCR", "Gurugram", 
+                "Noida", "Chennai", "Kochi", "Jaipur", "Bhubaneswar", "Chandigarh", "Remote"
+            ];
+
             CITIES.forEach(city => {
+                const normalized = city === "Bangalore" ? "Bengaluru" : (city === "Salt Lake" || city === "New Town" ? "Kolkata" : city);
                 if (new RegExp('\\b' + city.replace(' ', '\\s+') + '\\b', 'i').test(text)) {
-                    if (!userProfile.locations.includes(city)) {
-                        userProfile.locations.push(city);
+                    if (!userProfile.locations.includes(normalized)) {
+                        userProfile.locations.push(normalized);
                         memoryUpdated = true;
                     }
                 }
             });
-            if (/\b(remote|wfh|work from home)\b/i.test(text) && !userProfile.locations.includes("Remote")) {
+            if (/\b(remote|wfh|work from home|anywhere)\b/i.test(text) && !userProfile.locations.includes("Remote")) {
                 userProfile.locations.push("Remote");
                 memoryUpdated = true;
             }
@@ -311,16 +555,16 @@
                         userProfile.skills.some(userSkill => userSkill.toLowerCase() === req.toLowerCase())
                     );
                     let overlapRatio = matchingSkills.length / Math.max(1, job.skills_required.length);
-                    score += (overlapRatio * 0.40);
+                    score += (overlapRatio * 0.35);
                 }
 
-                // Location matching bonus
+                // Location matching bonus (including remote compliance)
                 if (userProfile.locations.length > 0) {
                     let locMatch = userProfile.locations.some(loc => 
                         job.location.toLowerCase().includes(loc.toLowerCase()) || 
                         (loc === "Remote" && job.is_remote)
                     );
-                    if (locMatch) score += 0.15;
+                    if (locMatch) score += 0.20;
                 }
 
                 // Stipend compliance
@@ -332,8 +576,18 @@
                 return { ...job, match_pct: finalPct, score: score };
             });
 
-            // Sort highest match first
-            ranked.sort((a, b) => b.score - a.score);
+            // If user explicitly queried for a city, filter/boost matching locations
+            if (userProfile.locations.length > 0) {
+                ranked.sort((a, b) => {
+                    const aMatches = userProfile.locations.some(l => a.location.toLowerCase().includes(l.toLowerCase()) || (l === "Remote" && a.is_remote));
+                    const bMatches = userProfile.locations.some(l => b.location.toLowerCase().includes(l.toLowerCase()) || (l === "Remote" && b.is_remote));
+                    if (aMatches && !bMatches) return -1;
+                    if (!aMatches && bMatches) return 1;
+                    return b.score - a.score;
+                });
+            } else {
+                ranked.sort((a, b) => b.score - a.score);
+            }
 
             // 6. Adaptive Natural Response
             let reply = "";
@@ -342,11 +596,11 @@
             if (lower.includes("what do you know") || lower.includes("who are you") || lower.includes("help")) {
                 reply = `🤖 Hello${candidateGreeting}! I am **RoleRadar**, your personalized AI Career Agent.\n\n` +
                         `• **Your Profile Memory:** ${userProfile.skills.length > 0 ? userProfile.skills.join(', ') : 'No skills recorded yet'}\n` +
-                        `• **Preferred Locations:** ${userProfile.locations.length > 0 ? userProfile.locations.join(', ') : 'Open to any'}\n` +
+                        `• **Preferred Locations:** ${userProfile.locations.length > 0 ? userProfile.locations.join(', ') : 'Open to all (Kolkata, Hyderabad, Pune, Bengaluru, Remote)'}\n` +
                         `• **Min Stipend:** ${userProfile.min_stipend ? '₹' + userProfile.min_stipend.toLocaleString() + '/mo' : 'Flexible'}\n\n` +
-                        `Tell me your stack (e.g. *"I am Rahul and I know Python, Docker, and SQL, looking for Remote >50k"*), and I will update your memory and rank real matches for you!`;
+                        `Tell me your stack (e.g. *"I am looking for Kolkata Salt Lake or Hyderabad roles with Python and SQL"*), and I will dynamically match and present verified company dossiers!`;
             } else if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey")) {
-                reply = `👋 Hey${candidateGreeting}! I'm ready to match you with top engineering roles. Tell me your skills, preferred cities, or target stipend!`;
+                reply = `👋 Hey${candidateGreeting}! I'm ready to match you with top engineering roles across **Kolkata (Salt Lake/New Town), Hyderabad, Pune, Bengaluru, and Remote**. What tech stack or cities would you like to explore?`;
             } else {
                 let top = ranked[0];
                 let memorySummary = [];
@@ -354,14 +608,14 @@
                 if (userProfile.locations.length > 0) memorySummary.push(`Location: **${userProfile.locations.join(', ')}**`);
                 if (userProfile.min_stipend) memorySummary.push(`Min Stipend: **₹${userProfile.min_stipend.toLocaleString()}/mo**`);
 
-                let memText = memorySummary.length > 0 ? `\n🧠 *Updated your profile memory with:* ${memorySummary.join(' | ')}\n` : '';
+                let memText = memorySummary.length > 0 ? `\n🧠 *Active Profile Filters:* ${memorySummary.join(' | ')}\n` : '';
 
-                reply = `🎯 Found **${ranked.length} ranked opportunities** tailored to you${candidateGreeting}:${memText}\n` +
+                reply = `🎯 Found **${ranked.length} verified opportunities** tailored to you${candidateGreeting}:${memText}\n` +
                         `⭐ **Top Recommendation: ${top.title} at ${top.company}**\n` +
-                        `📍 Location: ${top.location} ${top.is_remote ? '(Remote Available 🌐)' : ''}\n` +
-                        `💰 Stipend: ₹${top.stipend.toLocaleString()}/month | 📊 **${top.match_pct}% Profile Match**\n` +
-                        `🛠️ Required Tech: ${top.skills_required.join(', ')}\n\n` +
-                        `Check the ranked cards on the right. Mention any additional skills or preferences to re-rank in real time!`;
+                        `📍 **Location:** ${top.location} ${top.is_remote ? '(Remote Available 🌐)' : ''}\n` +
+                        `💰 **Stipend:** ₹${top.stipend.toLocaleString()}/month | 📊 **${top.match_pct}% Profile Match**\n` +
+                        `🏢 **About ${top.company}:** ${top.about_company}\n\n` +
+                        `Check out the interactive cards on the right for full company dossiers, requirements, and direct application links!`;
             }
 
             toolBadge.innerText = `Tools: ${tools.join(', ')}`;
@@ -389,34 +643,64 @@
 
         function renderJobs(jobs) {
             if (!jobs || jobs.length === 0) {
-                jobList.innerHTML = `<div class="text-xs text-slate-500 text-center py-6">No matching jobs found.</div>`;
+                jobList.innerHTML = `<div class="text-xs text-slate-500 text-center py-6">No matching roles found for current filter.</div>`;
                 document.getElementById('matchCount').innerText = "0 items";
                 return;
             }
 
             document.getElementById('matchCount').innerText = `${jobs.length} items`;
             jobList.innerHTML = jobs.map(j => `
-                <div class="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-slate-700 transition">
-                    <div class="flex items-start justify-between">
+                <div class="p-4 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 transition shadow-sm">
+                    <!-- Title and Match Badge -->
+                    <div class="flex items-start justify-between gap-2">
                         <div>
-                            <h4 class="font-semibold text-sm text-slate-100">${j.title}</h4>
-                            <p class="text-xs text-slate-400 font-medium">${j.company} • ${j.location} ${j.is_remote ? '<span class="text-emerald-400 text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 ml-1">Remote</span>' : ''}</p>
+                            <h4 class="font-semibold text-sm text-slate-100 leading-snug">${j.title}</h4>
+                            <p class="text-xs text-slate-400 font-medium mt-0.5">
+                                <span class="text-amber-400 font-semibold">${j.company}</span> • 📍 ${j.location} 
+                                ${j.is_remote ? '<span class="text-emerald-400 text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 ml-1.5 font-medium">Remote Available</span>' : ''}
+                            </p>
                         </div>
-                        <div class="text-right">
-                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <div class="text-right shrink-0">
+                            <span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
                                 ${j.match_pct}% Match
                             </span>
                         </div>
                     </div>
-                    <div class="mt-2 text-xs text-slate-300 font-semibold">
-                        ₹${j.stipend.toLocaleString()}/month
+
+                    <!-- Stipend Badge -->
+                    <div class="mt-2 text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
+                        <span>💰 ₹${j.stipend.toLocaleString()} / month</span>
                     </div>
-                    <div class="mt-2 flex flex-wrap gap-1">
-                        ${j.skills_required.map(s => `<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">${s}</span>`).join('')}
+
+                    <!-- About Company Card (Gathered Data) -->
+                    ${j.about_company ? `
+                    <div class="mt-2.5 p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 leading-relaxed">
+                        <div class="text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                            <span>🏢 About ${j.company}</span>
+                        </div>
+                        ${j.about_company}
                     </div>
-                    <div class="mt-3 flex space-x-2 pt-2 border-t border-slate-800/80">
-                        <button onclick="saveJob('${j.company}')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Save</button>
-                        <button onclick="dismissJob(${j.id})" class="text-xs px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition">Dismiss</button>
+                    ` : ''}
+
+                    <!-- Requirements Snippet -->
+                    <p class="mt-2 text-xs text-slate-400 leading-relaxed">
+                        <span class="text-slate-500 font-medium">Role:</span> ${j.requirements_text}
+                    </p>
+
+                    <!-- Tech Stack Tags -->
+                    <div class="mt-2.5 flex flex-wrap gap-1.5">
+                        ${j.skills_required.map(s => `<span class="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono border border-slate-700/60">${s}</span>`).join('')}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-3.5 flex items-center justify-between pt-2.5 border-t border-slate-800/80">
+                        <div class="flex space-x-2">
+                            <button onclick="saveJob('${j.company}')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">Save</button>
+                            <button onclick="dismissJob(${j.id})" class="text-xs px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition">Dismiss</button>
+                        </div>
+                        <button onclick="applyJob('${j.company}', '${j.title}')" class="text-xs px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold transition shadow-sm">
+                            Apply Now ↗
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -429,6 +713,10 @@
         function dismissJob(id) {
             const remaining = JOB_DATABASE.filter(j => j.id !== id);
             renderJobs(remaining);
+        }
+
+        function applyJob(company, title) {
+            quickQuery(`I want to apply for ${title} at ${company}. What should I prepare?`);
         }
 
         function updateProfile(prof) {
@@ -455,7 +743,7 @@
                 if (prof.locations && prof.locations.length > 0) {
                     locEl.innerText = Array.isArray(prof.locations) ? prof.locations.join(', ') : prof.locations;
                 } else {
-                    locEl.innerText = "Open to Any / Remote";
+                    locEl.innerText = "Open to Any / Remote (Pan-India)";
                 }
             }
         }
