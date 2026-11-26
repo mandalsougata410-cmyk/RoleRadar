@@ -86,6 +86,7 @@ def search_and_rank_jobs(
             "stipend": r["stipend"],
             "skills_required": list(skills_req),
             "requirements_text": r["requirements_text"],
+            "about_company": r["about_company"] if "about_company" in r.keys() and r["about_company"] else "",
             "score": round(final_score, 3),
             "match_pct": int(final_score * 100)
         })
